@@ -1,0 +1,3 @@
+export function SegmentedChoice<T extends string>({label,groupLabel=label,prefixLabel=true,value,options,disabled=false,onChange}:{label:string;groupLabel?:string;prefixLabel?:boolean;value:T;options:readonly {value:T;label:string}[];disabled?:boolean;onChange:(value:T)=>void}){
+  return <div className="target-mode" role="group" aria-label={groupLabel}>{options.map(option=><button key={option.value} type="button" disabled={disabled} aria-label={(prefixLabel?label:'')+option.label} aria-pressed={value===option.value} onClick={()=>{if(value!==option.value)onChange(option.value);}}>{option.label}</button>)}</div>;
+}

@@ -1,0 +1,5 @@
+import type {State} from '../../domain/types.ts';
+import {typeNames} from '../../domain/types.ts';
+import {Modal} from '../components/Modal.tsx';
+import {Icon} from '../components/Icon.tsx';
+export function PlanChooser({state,busy,onClose,onChoose,onCreate}:{state:State;busy:boolean;onClose:()=>void;onChoose:(id:string)=>void;onCreate:()=>void}){return <Modal title="更换计划" busy={busy} onClose={onClose}><div className="saved-plans">{[...state.plans].sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)).map(plan=><button className="saved-plan" disabled={busy||plan.id===state.activePlanId} aria-current={plan.id===state.activePlanId?'true':undefined} key={plan.id} onClick={()=>onChoose(plan.id)}><span><strong>{plan.name}</strong><small>{typeNames[plan.type]} · {plan.weeks} 周 · 每周 {plan.days.length} 天</small></span><span>{plan.id===state.activePlanId?'当前计划':<Icon name="chevron" size={20}/>}</span></button>)}</div><button className="primary full" disabled={busy} onClick={onCreate}><Icon name="plus" size={20}/>创建新计划</button></Modal>;}

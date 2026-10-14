@@ -1,0 +1,14 @@
+import http from 'node:http';
+import https from 'node:https';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import {spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../dist'),port=Number(process.env.PORT||5190),lan=process.argv.includes('--lan'),tls=!!process.env.TRAINING_TLS_CERT&&!!process.env.TRAINING_TLS_KEY,protocol=tls?'https':'http',address=`${protocol}://localhost:${port}/`;
+const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.json':'application/json','.webmanifest':'application/manifest+json','.txt':'text/plain; charset=utf-8'};
+const handler=async(req,res)=>{try{if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}const pathname=decodeURIComponent(new URL(req.url,address).pathname),file=path.resolve(root,`.${pathname==='/'?'/index.html':pathname}`);if(!file.startsWith(root+path.sep)){res.writeHead(403);res.end();return;}const body=await fs.readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':file.endsWith('sw.js')||file.endsWith('index.html')?'no-cache':'public, max-age=3600','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Permissions-Policy':'camera=(), microphone=(), geolocation=()','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"});res.end(req.method==='HEAD'?undefined:body);}catch(e){res.writeHead(e?.code==='ENOENT'?404:400);res.end('资源无法读取，请先完成构建。');}};
+const server=tls?https.createServer({cert:await fs.readFile(process.env.TRAINING_TLS_CERT),key:await fs.readFile(process.env.TRAINING_TLS_KEY)},handler):http.createServer(handler);
+function open(){if(!process.argv.includes('--open'))return;const child=spawn('cmd.exe',['/c','start','',address],{windowsHide:true});child.on('error',()=>console.log(`请打开 ${address}`));}
+server.on('error',async e=>{if(e.code==='EADDRINUSE'){try{const response=await fetch(address+'manifest.webmanifest');if(response.ok&&(await response.json()).name==='训练跟练'){console.log(`训练跟练预览已运行：${address}`);open();return;}}catch(error){console.error('已有端口未响应：',error instanceof Error?error.message:'连接失败');}}console.error('预览未启动：'+e.code);process.exitCode=1;});
+server.listen(port,lan?'0.0.0.0':'127.0.0.1',()=>{console.log(`训练跟练本地预览：${address}\n按 Ctrl+C 停止。数据保存在当前浏览器中。`);if(lan)for(const values of Object.values(os.networkInterfaces()))for(const network of values||[])if(network.family==='IPv4'&&!network.internal)console.log(`局域网预览：${protocol}://${network.address}:${port}/`);open();});

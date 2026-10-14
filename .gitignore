@@ -1,0 +1,13 @@
+node_modules/
+dist/
+test-results/
+.pnpm-store/
+*.log
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+/创建计划界面.png
+/跟练界面.png

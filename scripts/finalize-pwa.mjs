@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {gzipSync} from 'node:zlib';
+const directory=path.resolve('dist');
+const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(item=>item.isDirectory()?walk(path.join(dir,item.name)):[path.join(dir,item.name)]);
+const files=walk(directory).filter(file=>!file.endsWith('sw.js')).map(file=>path.relative(directory,file).replaceAll('\\','/'));
+const worker=fs.readFileSync('public/sw.js','utf8'),hash=crypto.createHash('sha256');for(const file of files)hash.update(fs.readFileSync(path.join(directory,file)));hash.update(worker);const build=hash.digest('hex').slice(0,12);
+const htmlPath=path.join(directory,'index.html'),html=fs.readFileSync(htmlPath,'utf8'),policy="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'";
+fs.writeFileSync(htmlPath,html.replace('<head>',`<head><meta http-equiv="Content-Security-Policy" content="${policy}"/><meta name="referrer" content="no-referrer"/>`));
+fs.writeFileSync(path.join(directory,'sw.js'),worker.replace('__BUILD__',JSON.stringify(build)).replace('__ASSETS__',JSON.stringify(files)));
+const compressed=files.filter(file=>/\.(js|css)$/.test(file)).reduce((n,file)=>n+gzipSync(fs.readFileSync(path.join(directory,file))).length,0),bytes=files.reduce((n,file)=>n+fs.statSync(path.join(directory,file)).size,0);
+if(compressed>250*1024||bytes>3*1024*1024)throw new Error('构建超出性能预算。');
+console.log(JSON.stringify({build,files:files.length,gzipJsCssKB:Math.round(compressed/102.4)/10,offlineKB:Math.round(bytes/102.4)/10}));
