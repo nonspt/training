@@ -1,6 +1,6 @@
 # 训练跟练 · PROJECT_CONTEXT
 
-更新：2026-10-14，正式版 V1.0（1.0.0）。用户已授权将当前版本发布到既有公共仓库 nonspt/training，并启用 GitHub Pages；此前仅本地开发的范围已更新。部署与验证状态见 RELEASE.md。
+更新：2026-10-14，正式版 V1.0（1.0.0）。用户已授权将当前版本发布到既有公共仓库 nonspt/training，并启用 GitHub Pages；此前仅本地开发的范围已更新。GitHub Pages 已发布，地址 https://nonspt.github.io/training/，线上主流程与离线验证通过；完整记录见 RELEASE.md。
 
 ## 背景与范围
 

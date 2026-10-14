@@ -1,5 +1,14 @@
 # 验证报告
 
+## 1.0.0 正式版发布验证 · 2026-10-14
+
+- `pnpm test`：17 项规则测试通过。`pnpm build`：类型检查与生产构建通过，本地 build `5e5beceeb1cd`，脚本/样式 gzip 94.5 KB，离线资源 331.9 KB。
+- 本地 `pnpm test:browser`：7 组通过；`pnpm test:pwa`：3 组通过，验证等待更新、草稿阻止更新、主动更新保留计划与离线重开。主流程初次运行时预览未启动，恢复服务后通过；无应用代码修复。
+- GitHub Actions 首次发布构建与部署均成功，工作流 38530998827；冻结锁文件安装、17 项规则测试、类型检查和 `/training/` 生产构建通过。线上 build `a9cb2d3c2411`，脚本/样式 gzip 94.5 KB，离线资源 332.0 KB。
+- `APP_URL=https://nonspt.github.io/training/ pnpm test:browser`：线上 7 组通过，包括触控编排、响应式/双主题、计时/计次、暂停/保存/恢复、完整与部分训练、备份合并及离线重开，运行时错误 0。报告为被忽略的 test-results/v1-online-browser-report.json。
+- 正式站点专项：HTTPS 200，设置版本 1.0.0；Manifest 启动与 scope 以及 Worker scope 均为 `/training/`；10 个缓存资源全部 200，JS MIME 正确，CSP 保留；断网重开正常，运行时错误 0。报告为 test-results/v1-release-site-report.json。专项脚本首次使用了不存在的空首页按钮名，修正测试选择器后通过，未修改应用功能。
+- V1.0 未新增依赖或改变数据库/备份格式。测试使用隔离浏览器和合成数据；真实 iPadOS Safari、主屏安装、VoiceOver 与系统权限仍未验收。
+
 ## 0.3.2 全应用设计与交互审查 · 2026-10-14
 
 - 类型检查及生产构建通过，build `0aaafa089fe0`；脚本/样式 gzip 94.5 KB，离线资源 331.9 KB，无新增依赖或数据迁移。

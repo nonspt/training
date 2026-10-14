@@ -2,7 +2,9 @@
 
 训练计划与跟练 PWA，正式版 V1.0（1.0.0）。沿用暖金色、双主题和 iPad mini 7 横屏布局。
 
-应用地址：[训练跟练](https://nonspt.github.io/training/)。源码仓库：[nonspt/training](https://github.com/nonspt/training)。首次发布状态与实际验证见 [发布记录](docs/project/RELEASE.md)。
+应用地址：[训练跟练](https://nonspt.github.io/training/)。源码仓库：[nonspt/training](https://github.com/nonspt/training)。Pages 已发布，线上主流程与离线验证通过；完整记录见 [发布记录](docs/project/RELEASE.md)。
+
+iPad 可直接用 Safari 打开上述正式地址，并在分享菜单中选择“添加到主屏幕”。从本地版迁移计划时，先在本地设置导出备份，再在线上设置选择备份、预览并确认导入。数据仍保存在各自浏览器中。
 
 ## 启动
 
