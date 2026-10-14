@@ -1,0 +1,59 @@
+# 训练跟练
+
+训练计划与跟练 PWA，正式版 V1.0（1.0.0）。沿用暖金色、双主题和 iPad mini 7 横屏布局。
+
+应用地址：[训练跟练](https://nonspt.github.io/training/)。源码仓库：[nonspt/training](https://github.com/nonspt/training)。首次发布状态与实际验证见 [发布记录](docs/project/RELEASE.md)。
+
+## 启动
+
+安装依赖并执行 `pnpm build` 后，可双击 [启动预览.cmd](启动预览.cmd)，然后访问 [本地应用](http://localhost:5190/)。不要直接双击 index.html；IndexedDB、模块脚本和 PWA 需要 HTTP/HTTPS 服务。
+
+第一次打开自动进入创建计划。取消可进入空首页；已有计划直接显示计划与周历。
+
+1. 拖动或点击动作库动作，设置时长/次数、重量与组数。
+2. 选择周数和训练日，点击完成设计。
+3. 首页进入跟练；计次动作完成后点确认，计时动作自动推进。
+
+仅保留有氧 42 个、无氧 84 个动作。原综合库的体能动作归入有氧，复合、搬运、爬行与稳定动作归入无氧，116 个不同动作均保留。支持部位、分组及徒手/器械筛选。旧综合计划可以继续编辑与跟练。杠铃填写总重，哑铃填写单只重量；“动作参考”可展开查看重量口径、说明与来源。
+
+可在动作间点加号选择插入位置。计划中的拖动手柄用于重排；上移/下移按钮支持键盘和点击操作。每次只展开一个动作，其余显示核心摘要。周数与训练日同行，时长/次数胶囊和滑块同行，重量/组数等并排，滑块不另设快选按钮。当前动作尽量居中并保留上一动作。所有模块内容在模块内滚动，底部保存操作固定。
+
+动作库和计划区等宽。计划区省去统计、首次训练日期与常驻说明；跟练省去“当前倒计时”和重复状态标题，分段进度条紧接在计时数字下方。热身、有氧、力量、核心、恢复采用不同颜色，当前段有边框，跳过段有纹理；计次段在确认完成后才推进。
+
+全应用已清理英文装饰标题与页脚，统一字体层级和 SVG 图标。动作库可纵向滑动浏览、横向拖入；按取消键可退出当前拖动。保存期间锁定编辑，弹窗返回原入口或主要按钮，反馈在当前弹窗内显示。备份预览显示文件名，快速更换文件时只接受最新选择。
+
+跟练切到后台或锁屏时暂停，返回后继续。退出保存进度，下次可恢复；提前结束保存部分训练但不标记训练日完成。数据留在当前浏览器，可在设置中导出备份；导入采用校验、预览、确认合并，保留本机冲突。
+
+## iPad 本地访问
+
+屏幕适配目标：1133×744、DPR 2、触控，另验证浏览器栏压缩后的 1133×650。
+
+同一局域网可执行 `node scripts/preview.mjs --lan` 查看页面。完整 PWA、Service Worker 与 Web Locks 需要安全上下文；普通 `http://电脑IP:5190` 只用于页面预览。iPad 实机跟练、主屏安装和离线验收需要电脑提供 iPad 已信任的 HTTPS 证书，包含所用 IP/主机名的 SAN，然后设置证书路径启动：
+
+```powershell
+$env:TRAINING_TLS_CERT = '证书文件的绝对路径'
+$env:TRAINING_TLS_KEY = '私钥文件的绝对路径'
+node scripts/preview.mjs --lan
+```
+
+证书/私钥不属于应用源码，不能加入仓库。HTTPS 默认仍使用 5190，访问地址会在启动时打印。Safari 分享菜单可添加到主屏幕；真实 iPad 验收尚未执行。
+
+## 开发与验证
+
+Node ≥22.18、pnpm 11.25。生产依赖沿用同工作区划船机锁定版本，不增加 UI 或拖拽库。
+
+```powershell
+pnpm install --frozen-lockfile
+pnpm check
+pnpm test
+pnpm build
+pnpm preview
+```
+
+预览运行后，另开终端执行 `pnpm test:browser`；边界回归执行 `pnpm test:edge`；动作库执行 `pnpm test:library`；紧凑编辑器和旧综合计划兼容执行 `pnpm test:editor`。`pnpm test:pwa` 对本项目的生产预览验证等待更新与缓存切换，临时修改生成的 dist/sw.js，并在 finally 中恢复；测试时不要同时构建。测试使用隔离 Chrome 和合成数据，报告/截图在 `test-results/`，不读取或修改真实浏览器数据。`CHROME_PATH` 可指定 Chromium；`APP_URL` 可指定服务地址。重新生成安装图标：`node scripts/icons.mjs`。
+
+生产构建自动按资源内容生成 SW 版本和离线清单。Vite dev 用于开发；离线与更新应对生产预览验证。数据库与划船机完全独立，HTTP/HTTPS、不同域名及端口属于不同数据源，迁移须导出/导入。
+
+全应用设计与交互专项检查执行 `pnpm test:design`，包括触控、键盘、反馈层级、备份选择竞态、安装异常与字号放大。使用独立浏览器和测试数据，报告位于 `test-results/design-audit-report.json`。
+
+文档：[项目事实](docs/project/PROJECT_CONTEXT.md)、[设计与交互审查](docs/project/UI_REVIEW.md)、[动作库体系与兼容](docs/product/动作库体系.md)、[动作资料](docs/product/动作资料.md)、[验证报告](docs/project/VALIDATION_REPORT.md)、[已知限制](docs/project/KNOWN_ISSUES.md)。
