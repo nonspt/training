@@ -1,5 +1,8 @@
 {
-  "name": "training-follow", "version": "1.0.0", "private": true, "type": "module",
+  "name": "training-follow",
+  "version": "1.0.5",
+  "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5190",
     "check": "tsc --noEmit",
@@ -11,9 +14,26 @@
     "test:pwa": "node tests/pwa-update.mjs",
     "test:library": "node tests/library-browser.mjs",
     "test:editor": "node tests/editor-density.mjs",
-    "test:design": "node tests/design-audit.mjs"
+    "test:design": "node tests/design-audit.mjs",
+    "test:home": "node tests/home-dashboard.mjs",
+    "test:timeline": "node tests/timeline-flow.mjs",
+    "test:data-safety": "node tests/data-safety.mjs"
   },
-  "dependencies": {"react": "19.2.6", "react-dom": "19.2.6"},
-  "devDependencies": {"@types/node": "22.19.19", "@types/react": "19.2.14", "@types/react-dom": "19.2.3", "@vitejs/plugin-react": "6.0.2", "playwright-core": "1.55.1", "typescript": "5.9.3", "vite": "8.0.16"},
-  "engines": {"node": ">=22.18.0"}, "packageManager": "pnpm@11.25.0"
+  "dependencies": {
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "playwright-core": "1.55.1",
+    "typescript": "5.9.3",
+    "vite": "8.0.16"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "packageManager": "pnpm@11.25.0"
 }

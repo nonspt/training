@@ -7,7 +7,22 @@ import {addDays,buildStages,createItem,firstTrainingDate,insertItem,monday,moveI
 import {advance,newSession,tick,workoutFrom} from '../src/domain/session.ts';
 import {sessionProgress} from '../src/domain/session-progress.ts';
 import {parseBackup,validatePlan,validateState} from '../src/domain/validation.ts';
+import {EFFORT_MAX} from '../src/domain/training-targets.ts';
 const plan=():Plan=>({id:'plan-1',name:'测试计划',type:'mixed',weeks:4,days:[1,3,5],startDate:'2026-10-14',items:[createItem(findExercise('march')),createItem(findExercise('squat'))],createdAt:'2026-10-14T00:00:00.000Z',updatedAt:'2026-10-14T00:00:00.000Z',version:1});
+
+test('Effort 1–16 survives plans, immutable stages and backup round-trip; old values remain unchanged',()=>{
+  assert.equal(EFFORT_MAX,16);
+  for(const effort of [1,5,10,16]){
+    const p=plan();p.items[0].effort=effort;
+    const valid=validatePlan(p),draft=newSession(valid,valid.startDate,buildStages(valid,exercises));
+    const state={...emptyState(),onboarded:true,plans:[valid],activePlanId:valid.id,draft};
+    const restored=parseBackup(JSON.stringify({app:'training-follow',schemaVersion:1,exportedAt:valid.updatedAt,state}));
+    assert.equal(restored.state.plans[0].items[0].effort,effort);assert.equal(restored.state.draft?.stages[0].effort,effort);
+  }
+  for(const effort of [0,17,1.5]){const p=plan();p.items[0].effort=effort;assert.throws(()=>validatePlan(p));}
+  const p=plan(),draft=newSession(p,p.startDate,buildStages(p,exercises));draft.stages[0].effort=17;
+  assert.throws(()=>validateState({...emptyState(),plans:[p],activePlanId:p.id,draft}));
+});
 test('Segmented progress follows timed stages, waits for count confirmation and keeps skipped completion separate',()=>{
   const p=plan();p.items[0].seconds=10;p.items[1].sets=2;p.items[1].rest=10;
   let s=newSession(p,p.startDate,buildStages(p,exercises));

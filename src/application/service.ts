@@ -1,4 +1,5 @@
 import type {Plan,Session} from '../domain/types.ts';
+import {emptyState} from '../domain/types.ts';
 import {Repository} from '../repositories/repository.ts';
 import {validatePlan,validateSession} from '../domain/validation.ts';
 import type {Backup} from '../domain/validation.ts';
@@ -15,5 +16,13 @@ export class TrainingService {
   finish(session:Session){return this.repository.update(s=>{if(s.workouts.some(w=>w.id===session.id))return s;if(s.draft?.id!==session.id)throw new Error('跟练已改变，请返回首页。');return {...s,draft:null,workouts:[...s.workouts,workoutFrom(session)]};});}
   discard=async()=>{if(!navigator.locks)return this.repository.update(s=>({...s,draft:null}));return navigator.locks.request('training-follow-session',{ifAvailable:true},async lock=>{if(!lock)throw new Error('另一窗口正在跟练，请先退出该窗口，再丢弃草稿。');return this.repository.update(s=>({...s,draft:null}));});};
   switchPlan(id:string){return this.repository.update(s=>{if(s.draft)throw new Error('请先结束当前跟练，再切换计划。');if(!s.plans.some(p=>p.id===id))throw new Error('计划无法找到，请重新打开列表。');return {...s,activePlanId:id};});}
+  async clearAll(revision:number){
+    const reset=()=>this.repository.update(()=>emptyState(),revision);
+    if(!navigator.locks)return reset();
+    return navigator.locks.request('training-follow-session',{ifAvailable:true},async lock=>{
+      if(!lock)throw new Error('另一窗口正在跟练。请先保存并退出该窗口，再删除数据。');
+      return reset();
+    });
+  }
   async mergeBackup(backup:Backup,revision:number){return this.repository.update(s=>{if(s.draft)throw new Error('请先结束当前跟练，再导入备份。');const localIds=new Set(s.plans.map(p=>p.id)),workoutIds=new Set(s.workouts.map(w=>w.id));return {...s,onboarded:true,plans:[...s.plans,...backup.state.plans.filter(p=>!localIds.has(p.id))],workouts:[...s.workouts,...backup.state.workouts.filter(w=>!workoutIds.has(w.id))],activePlanId:s.activePlanId??backup.state.activePlanId,draft:null};},revision);}
 }

@@ -1,0 +1,8 @@
+.delete-confirm-content{display:flex;flex-direction:column;gap:16px}
+.delete-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;background:var(--raised);border-radius:var(--radius-sm);padding:16px;margin:0}
+.delete-counts>div{min-width:0}
+.delete-counts dt{font-size:var(--font-caption);color:var(--secondary);line-height:1.4}
+.delete-counts dd{font-size:1rem;line-height:1.5;font-weight:600;margin:4px 0 0;overflow-wrap:anywhere}
+.delete-confirm-choice{display:flex;align-items:center;gap:12px;min-height:48px;font-size:var(--font-body);line-height:1.5;cursor:pointer}
+.delete-confirm-choice input{flex-shrink:0}
+.primary.danger-button{background:var(--danger);color:var(--surface)}

@@ -1,0 +1,10 @@
+.follow-structure .training-timeline{flex:1;min-height:0;padding:0 14px;scroll-behavior:auto;overflow-anchor:none}
+.training-sequence{position:relative;isolation:isolate;display:flex;flex-direction:column;gap:24px;margin:0;padding:0;list-style:none}
+.training-sequence .follow-step{z-index:1;align-items:center;gap:10px;min-height:72px;padding:10px;border:1px solid transparent;border-radius:var(--radius-sm);background:var(--raised)}
+.training-sequence .follow-step.current{border-color:var(--accent-ink);background:var(--accent-soft)}
+.training-sequence .follow-step.past{background:var(--raised)}
+.training-sequence .step-marker{width:26px;height:28px;border-radius:7px;background:var(--surface);font-size:var(--font-caption)}
+.training-sequence .follow-step.current .step-marker{background:var(--accent);color:var(--on-accent);font-weight:700}
+.training-sequence .follow-step strong{font-size:var(--font-body);line-height:1.4}
+.training-sequence .follow-step small{font-size:var(--font-caption);line-height:1.45}
+@media(max-width:959px){.follow-structure .training-timeline{padding-inline:10px}.training-sequence .follow-step{gap:8px;padding:8px}}

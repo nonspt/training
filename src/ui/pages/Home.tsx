@@ -1,13 +1,76 @@
-import {useState} from 'react';
+import {useRef} from 'react';
 import type {Plan,State} from '../../domain/types.ts';
-import {typeNames} from '../../domain/types.ts';
-import {addDays,dateLabel,durationLabel,estimateItem,itemSummary,monday,nextTraining,schedule,today,weekIndex} from '../../domain/plans.ts';
-import {findExercise} from '../../content/exercises.ts';
+import {categoryNames,typeNames} from '../../domain/types.ts';
+import {buildStages,durationLabel,estimateItem,schedule,today,weekIndex} from '../../domain/plans.ts';
+import {exercises} from '../../content/exercises.ts';
 import {Icon} from '../components/Icon.tsx';
-export function Home({state,busy,onCreate,onEdit,onStart,onResume,onDiscard}:{state:State;busy:boolean;onCreate:()=>void;onEdit:(plan:Plan)=>void;onStart:(plan:Plan,date:string)=>void;onResume:()=>void;onDiscard:()=>void}){
-  const plan=state.plans.find(p=>p.id===state.activePlanId),next=plan?nextTraining(plan,state.workouts):null,[view,setView]=useState<{id:string;week:number}|null>(null),date=today();
-  if(!plan)return <div className="home-empty module"><div className="empty-state"><span className="empty-icon"><Icon name="train" size={40}/></span><h2>从一份自己的计划开始</h2><p>选择动作，安排训练日<br/>接下来的每一段，交给跟练计时</p><button className="primary" onClick={onCreate}><Icon name="plus" size={20}/>创建训练计划</button></div><div className="empty-calendar"><Icon name="calendar" size={22}/><span>创建后，这里会显示你的训练周历</span></div></div>;
-  const dates=schedule(plan),doneDates=new Set(state.workouts.filter(w=>w.planId===plan.id&&w.completed).map(w=>w.scheduledDate)),done=dates.filter(d=>doneDates.has(d)).length,total=plan.items.reduce((n,i)=>n+estimateItem(i),0),week=view?.id===plan.id?Math.min(plan.weeks-1,view.week):weekIndex(plan,next??date),start=addDays(monday(plan.startDate),week*7),weekDates=Array.from({length:7},(_,i)=>addDays(start,i)),sessions=weekDates.filter(d=>dates.includes(d)),weekDone=sessions.filter(d=>doneDates.has(d)).length;
-  return <div className="home-grid"><section className="module current-plan" aria-label="当前计划"><header className="panel-header"><span className="badge">{typeNames[plan.type]} · {plan.weeks} 周</span><button className="text-button" disabled={busy||!!state.draft} onClick={onCreate}><Icon name="switch" size={20}/>更换计划</button></header><div className="plan-card-scroll internal-scroll" tabIndex={0} aria-label="当前计划内容"><h2 className="plan-name">{plan.name}</h2><div className="plan-stats"><div><span>当前周</span><strong>{weekIndex(plan,date)+1}<small> / {plan.weeks}</small></strong></div><div><span>已完成</span><strong>{done}<small> / {dates.length}</small></strong></div><div><span>每周训练</span><strong>{plan.days.length}<small> 天</small></strong></div></div><div className="progress" role="progressbar" aria-label="计划完成进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(done/Math.max(1,dates.length)*100)}><span style={{width:done/Math.max(1,dates.length)*100+'%'}}/></div><div className="next-date"><span className="eyebrow">{state.draft?'尚未结束的训练':next?'最近训练日':'本轮计划'}</span><h3>{state.draft?dateLabel(state.draft.scheduledDate):next?dateLabel(next):'全部完成'}</h3><p className="muted">{next&&next<date?'可补练 · ':''}{plan.items.length} 个动作 · 预计 {durationLabel(total)}</p></div><div className="outline-list">{plan.items.map((item,index)=>{const exercise=findExercise(item.exerciseId);return <div className="outline-row" key={item.id}><span className={'category-mark '+exercise.category}/><span className="outline-number">{String(index+1).padStart(2,'0')}</span><strong>{exercise.name}</strong><span>{itemSummary(item)}</span></div>;})}</div><p className="tiny-note">计次动作以确认完成为准，预计用时仅用于安排。</p></div><footer className="plan-home-actions">{state.draft?<><button className="primary" disabled={busy} onClick={onResume}><Icon name="play" size={20}/>继续跟练</button><button className="text-button danger" disabled={busy} onClick={onDiscard}>丢弃未完成跟练</button></>:<button className="primary" disabled={busy||!next} onClick={()=>next&&onStart(plan,next)}><Icon name="play" size={20}/>{next?'进入跟练':'本轮已完成'}</button>}</footer></section>
-  <section className="module calendar-module" aria-label="训练周历"><header className="panel-header"><h3>训练周历</h3><div className="week-selector"><button className="icon-button" aria-label="上一周" title="上一周" disabled={week===0} onClick={()=>setView({id:plan.id,week:week-1})}><Icon name="back" size={18}/></button><label className="sr-only" htmlFor="view-week">查看周次</label><select id="view-week" value={week} onChange={e=>setView({id:plan.id,week:Number(e.target.value)})}>{Array.from({length:plan.weeks},(_,i)=><option key={i} value={i}>第 {i+1} / {plan.weeks} 周</option>)}</select><button className="icon-button" aria-label="下一周" title="下一周" disabled={week===plan.weeks-1} onClick={()=>setView({id:plan.id,week:week+1})}><Icon name="chevron" size={18}/></button></div></header><div className="calendar-body internal-scroll" tabIndex={0} aria-label="本周日程"><div className="week-calendar">{weekDates.map((d,i)=>{const planned=dates.includes(d),complete=doneDates.has(d);return <div key={d} className={`calendar-day ${planned?'training-day':''} ${d===date?'today':''} ${complete?'done':''}`} aria-label={`${dateLabel(d)}${d===date?'，今天':''}，${complete?'已完成':planned?'训练日':'休息日'}`}><span>{['一','二','三','四','五','六','日'][i]}</span><strong>{Number(d.slice(-2))}</strong><small>{complete?<Icon name="check" size={14}/>:planned?<span className="calendar-dot"/>:null}</small></div>;})}</div><div className="week-summary"><span>{start.slice(5).replace('-',' / ')} — {addDays(start,6).slice(5).replace('-',' / ')}</span><strong>本周完成 {weekDone} / {sessions.length} 次</strong></div><div className="schedule-list">{sessions.map((d,index)=>{const complete=doneDates.has(d),isNext=d===next;return <button className={`schedule-row ${isNext?'upcoming':''}`} key={d} disabled={busy||complete||!!state.draft} onClick={()=>onStart(plan,d)}><span className="schedule-order">{String(index+1).padStart(2,'0')}</span><span className="row-copy"><strong>{dateLabel(d)}</strong><small>{plan.name} · {durationLabel(total)}</small></span><span className={complete?'status complete':'status'}>{complete?'已完成':isNext?'最近训练':d<date?'待补练':'待训练'}{!complete&&<Icon name="chevron" size={16}/>}</span></button>;})}{!sessions.length&&<div className="empty-state compact"><Icon name="calendar" size={32}/><p>本周没有安排训练</p></div>}</div></div><footer className="calendar-actions"><button className="secondary" disabled={busy||!!state.draft} onClick={()=>onEdit(plan)}><Icon name="edit" size={18}/>编辑计划</button><span className="muted">{state.draft?'结束跟练后可编辑计划':'按周循环，按自己的节奏完成'}</span></footer></section></div>;
+import {FlowConnections} from '../components/FlowConnections.tsx';
+import {TrainingDashboard} from './TrainingDashboard.tsx';
+import './Home.css';
+
+type HomeProps={
+  state:State;busy:boolean;onCreate:()=>void;onEdit:(plan:Plan)=>void;
+  onStart:(plan:Plan,date:string)=>void;onResume:()=>void;onDiscard:()=>void;
+};
+
+export function Home({state,busy,onCreate,onEdit,onStart,onResume,onDiscard}:HomeProps){
+  const movements=useRef<HTMLOListElement>(null);
+  const plan=state.plans.find(p=>p.id===state.activePlanId);
+  const date=today();
+  if(!plan)return <div className="home-empty module">
+    <div className="empty-state"><span className="empty-icon"><Icon name="train" size={40}/></span>
+      <h2>从一份自己的计划开始</h2><p>选择动作，安排训练日<br/>接下来的每一段，交给跟练计时</p>
+      <button className="primary" onClick={onCreate}><Icon name="plus" size={20}/>创建训练计划</button>
+    </div>
+    <div className="empty-calendar"><Icon name="calendar" size={22}/><span>创建后，查看训练安排与跟练记录</span></div>
+  </div>;
+
+  const dates=schedule(plan);
+  const doneDates=new Set(state.workouts.filter(w=>w.planId===plan.id&&w.completed).map(w=>w.scheduledDate));
+  const done=dates.filter(d=>doneDates.has(d)).length;
+  const total=plan.items.reduce((n,item)=>n+estimateItem(item),0);
+  const estimated=durationLabel(total).split(' ');
+  const stages=buildStages(plan,exercises);
+  const movementDensity=stages.length<=3?'few':stages.length<=6?'medium':stages.length<=10?'regular':'dense';
+  const completion=Math.round(done/Math.max(1,dates.length)*100);
+
+  return <div className="home-grid home-redesign">
+    <section className="module current-plan" aria-label="当前计划">
+      <header className="panel-header home-plan-header">
+        <p className="home-card-label">当前计划</p>
+        <button className="text-button" disabled={busy||!!state.draft} onClick={onCreate}><Icon name="switch" size={18}/>更换计划</button>
+      </header>
+      <div className="plan-card-scroll internal-scroll home-plan-scroll" tabIndex={0} aria-label="当前计划内容">
+        <div className="home-plan-identity">
+          <h2 className="plan-name">{plan.name}</h2>
+          <p className="home-plan-meta"><span>{typeNames[plan.type]}</span><span>第 {weekIndex(plan,date)+1} / {plan.weeks} 周</span><span>每周 {plan.days.length} 天</span></p>
+        </div>
+        <div className="plan-stats home-metrics">
+          <div><span>预计用时</span><strong>{estimated[0]}<small>{estimated.slice(1).join(' ')}</small></strong></div>
+          <div><span>训练环节</span><strong>{stages.length}<small>项</small></strong></div>
+          <div><span>完成训练</span><strong>{done}<small>/ {dates.length} 次</small></strong></div>
+        </div>
+        <div className="progress home-plan-progress" role="progressbar" aria-label="计划完成进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={completion}><span style={{width:completion+'%'}}/></div>
+        <section className="home-contents" aria-labelledby="home-movement-title">
+          <div className="home-section-heading"><h3 id="home-movement-title">完整时间线</h3><span>{stages.length} 个环节</span></div>
+          <ol className="outline-list home-movement-grid" ref={movements} data-density={movementDensity} aria-label="按时间顺序排列的训练动作">
+            {stages.map((stage,index)=>{
+              return <li className="outline-row home-movement" key={stage.id} data-flow-node={stage.id}
+                aria-label={(index+1)+'，'+categoryNames[stage.category]+'，'+stage.name}>
+                <span className={'home-order '+stage.category}>{String(index+1).padStart(2,'0')}</span>
+                <div className="home-movement-copy"><strong>{stage.name}</strong></div>
+              </li>;
+            })}
+            <FlowConnections hostRef={movements} layoutKey={plan.id+':'+plan.version+':'+stages.map(stage=>stage.id).join(',')} layout="grid"/>
+          </ol>
+        </section>
+      </div>
+      <footer className="plan-home-actions home-plan-footer">
+        <button className="secondary" disabled={busy||!!state.draft} onClick={()=>onEdit(plan)}><Icon name="edit" size={18}/>编辑计划</button>
+      </footer>
+    </section>
+
+    <TrainingDashboard key={plan.id} plan={plan} state={state} busy={busy} total={total}
+      onStart={onStart} onResume={onResume} onDiscard={onDiscard}/>
+  </div>;
 }

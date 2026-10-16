@@ -1,3 +1,4 @@
+import {EFFORT_MIN,EFFORT_MAX} from '../../domain/training-targets.ts';
 import type {Exercise,PlanItem} from '../../domain/types.ts';
 import {bodyPartNames} from '../../domain/types.ts';
 import {RangeField} from './RangeField.tsx';
@@ -16,7 +17,7 @@ export function PlanItemSettings({item,exercise,index,total,onChange,onReorder,o
         {exercise.weighted&&<RangeField label="重量" sliderLabel={'调节'+exercise.name+'重量'} unit="kg" value={item.weight} min={0} max={exercise.maxWeight??50} step={.5} onChange={weight=>onChange({weight})}/>}
         {hasSets&&<RangeField label="组数" sliderLabel={'调节'+exercise.name+'组数'} unit="组" value={item.sets} min={1} max={10} onChange={sets=>onChange({sets})}/>}
         {hasSets&&item.sets>1&&<RangeField label="组间休息" sliderLabel={'调节'+exercise.name+'组间休息'} unit="秒" value={item.rest} min={0} max={180} step={5} onChange={rest=>onChange({rest})}/>}
-        {exercise.category==='cardio'&&<RangeField label="主观用力" sliderLabel={'调节'+exercise.name+'主观用力'} unit="/10" value={item.effort} min={1} max={10} onChange={effort=>onChange({effort})}/>}
+        {exercise.category==='cardio'&&<RangeField label="主观用力" sliderLabel={'调节'+exercise.name+'主观用力'} unit={'/'+EFFORT_MAX} value={item.effort} min={EFFORT_MIN} max={EFFORT_MAX} onChange={effort=>onChange({effort})}/>}
       </div>
       <details className="movement-details" key={exercise.id}>
         <summary><Icon name="chevron" size={16}/>动作参考</summary>

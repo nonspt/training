@@ -1,0 +1,119 @@
+/* Home presentation: all rules are scoped to the two fixed home cards. */
+.home-redesign{--home-pad:20px;--home-gap:16px;--movement-row:34px;--flow-gap:36px}
+.home-redesign .current-plan,.home-redesign .calendar-module{display:flex;flex-direction:column}
+.home-redesign .current-plan .home-plan-header,.home-redesign .calendar-module .home-week-header{padding:10px var(--home-pad) 4px;min-height:58px;gap:12px;flex-shrink:0}
+.home-redesign .home-card-label{font-size:var(--font-body);font-weight:600;color:var(--secondary);letter-spacing:.025em}
+.home-redesign .text-button{font-size:var(--font-label)}
+.home-redesign .plan-card-scroll{flex:1;min-height:0;padding:4px var(--home-pad) 8px;display:flex;flex-direction:column;overflow:auto}
+.home-redesign .home-plan-identity{flex-shrink:0}
+.home-redesign .plan-name{font-size:1.625rem;line-height:1.25;letter-spacing:-.035em;font-weight:650;margin:0;overflow-wrap:anywhere}
+.home-redesign .home-plan-meta{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;font-size:var(--font-label);color:var(--secondary);line-height:1.4}
+.home-redesign .home-plan-meta>span+span{border-left:1px solid var(--line);padding-left:10px}
+.home-redesign .home-plan-meta>span:first-child{color:var(--accent-ink);font-weight:600}
+.home-redesign .home-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 8px;flex-shrink:0}
+.home-redesign .home-metrics>div{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px;min-width:0}
+.home-redesign .home-metrics>div+div{padding-left:16px;border-left:1px solid var(--line)}
+.home-redesign .home-metrics>div>span{font-size:var(--font-caption);color:var(--secondary)}
+.home-redesign .home-metrics strong{font-size:1.625rem;font-weight:600;line-height:1.2;white-space:normal;font-variant-numeric:tabular-nums}
+.home-redesign .home-metrics small{font-size:var(--font-caption);color:var(--secondary);font-weight:400;margin-left:5px;letter-spacing:0}
+.home-redesign .home-plan-progress{height:4px;min-height:4px;margin:0;background:var(--raised);flex-shrink:0}
+.home-redesign .home-plan-progress>span{background:var(--accent-ink)}
+.home-redesign .home-contents{display:flex;flex-direction:column;flex:1 0 auto;margin-top:14px}
+.home-redesign .home-section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-shrink:0}
+.home-redesign .home-section-heading h3{font-size:var(--font-body);font-weight:600;letter-spacing:0}
+.home-redesign .home-section-heading>span{font-size:var(--font-caption);color:var(--secondary);text-align:right}
+.home-redesign .home-movement-grid{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(var(--movement-row),auto);align-content:start;gap:var(--flow-gap) 44px;flex:1 0 auto;border:0;margin:8px 0 0;padding:0 16px;list-style:none}
+.home-redesign .home-movement-grid[data-density=medium]{--movement-row:38px;align-content:center}
+.home-redesign .home-movement-grid[data-density=regular]{--movement-row:34px}
+.home-redesign .home-movement-grid[data-density=few]{grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(44px,auto);gap:28px;align-content:center;padding-inline:0}
+.home-redesign .outline-row{position:relative;z-index:1;display:grid;grid-template-columns:26px minmax(0,1fr);align-items:center;gap:8px;min-height:var(--movement-row);max-height:none;flex:none;padding:3px 8px;border:0;border-radius:var(--radius-sm);background:var(--raised);font-size:var(--font-body)}
+.home-redesign .home-order{display:flex;align-items:center;justify-content:center;width:26px;min-height:28px;font-size:var(--font-caption);font-weight:600;font-variant-numeric:tabular-nums;color:var(--secondary);background:var(--surface);border-radius:7px;align-self:center}
+.home-redesign .home-order.warmup{color:var(--warmup)}.home-redesign .home-order.cardio{color:var(--cardio)}.home-redesign .home-order.strength{color:var(--strength)}.home-redesign .home-order.core{color:var(--core)}.home-redesign .home-order.recovery{color:var(--recovery)}
+.home-redesign .home-movement-copy{min-width:0}
+.home-redesign .home-movement-copy>strong{display:block;font-size:var(--font-body);font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.home-redesign .home-movement-grid[data-density=few] .outline-row{grid-template-columns:26px minmax(0,1fr);padding:6px 10px;gap:10px}
+.home-redesign .home-movement-grid[data-density=few] .home-order{width:26px;min-height:28px;font-size:var(--font-caption)}
+.home-redesign .home-movement-grid[data-density=few] .home-movement-copy>strong{font-size:var(--font-body)}
+.home-redesign .home-plan-footer{padding:12px var(--home-pad);border-top:1px solid var(--line);flex-shrink:0}
+.home-redesign .home-plan-footer>.secondary{width:100%;min-height:48px;border-radius:12px;font-size:var(--font-body)}
+
+.home-redesign .home-movement-grid[data-density=dense]{--movement-row:32px;--flow-gap:36px}
+.home-redesign .home-movement-grid[data-density=dense] .outline-row{padding-block:2px}
+.home-redesign .dashboard-today{font-size:var(--font-caption);color:var(--secondary)}
+.home-redesign .calendar-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:4px var(--home-pad) 10px}
+.home-redesign .dashboard-focus{padding:14px 16px;border-radius:var(--radius-sm);background:var(--accent-soft);flex-shrink:0}
+.home-redesign .dashboard-focus.finished{background:var(--success-soft)}
+.home-redesign .dashboard-focus-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--font-caption);color:var(--accent-ink);line-height:1.4}
+.home-redesign .dashboard-date-badge{font-weight:600}
+.home-redesign .next-date{padding:0;min-width:0}
+.home-redesign .next-date h3{font-size:1.5rem;line-height:1.35;letter-spacing:-.025em;font-weight:650;margin:8px 0 0;overflow-wrap:anywhere}
+.home-redesign .dashboard-focus-detail{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:var(--font-label);line-height:1.4;color:var(--secondary);overflow-wrap:anywhere}
+.home-redesign .dashboard-focus-detail .app-icon{flex-shrink:0}
+.home-redesign .dashboard-week-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:16px 0;flex-shrink:0}
+.home-redesign .dashboard-week-stats>div{min-width:0}
+.home-redesign .dashboard-week-stats>div+div{border-left:1px solid var(--line);padding-left:24px}
+.home-redesign .dashboard-week-stats>div>span{display:block;font-size:var(--font-caption);line-height:1.4;color:var(--secondary)}
+.home-redesign .dashboard-week-stats strong{display:block;margin-top:4px;font-size:1.5rem;line-height:1.3;font-weight:600;font-variant-numeric:tabular-nums}
+.home-redesign .dashboard-week-stats strong>small{font-size:var(--font-caption);font-weight:400;color:var(--secondary);margin-left:5px}
+.home-redesign .dashboard-week-progress{height:4px;min-height:4px;margin-top:8px;background:var(--raised)}
+.home-redesign .dashboard-week-progress>span{background:var(--accent-ink)}
+.home-redesign .dashboard-stat-note{display:block;font-size:var(--font-caption);line-height:1.4;color:var(--secondary);margin-top:5px}
+.home-redesign .dashboard-details{display:flex;flex-direction:column;flex:1 0 auto;min-height:0}
+.home-redesign .dashboard-content-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px;background:var(--raised);border-radius:12px;flex-shrink:0}
+.home-redesign .dashboard-content-switch>button{min-width:44px;min-height:44px;padding:8px;border:0;border-radius:9px;background:transparent;color:var(--secondary);font-size:var(--font-label);font-weight:500}
+.home-redesign .dashboard-content-switch>button[aria-pressed=true]{background:var(--surface);color:var(--text);box-shadow:var(--shadow);font-weight:600}
+.home-redesign .dashboard-list{display:flex;flex-direction:column;justify-content:center;flex:1 0 auto;gap:6px;list-style:none;margin:8px 0 0;padding:0;min-height:0}
+.home-redesign .dashboard-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:54px;padding:6px 0;border-bottom:1px solid var(--line);color:var(--text)}
+.home-redesign .dashboard-row:last-child{border-bottom:0}
+.home-redesign .dashboard-date-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;align-self:stretch;min-height:40px;border-radius:8px;background:var(--raised);font-variant-numeric:tabular-nums}
+.home-redesign .dashboard-date-tile>small{font-size:var(--font-caption);color:var(--secondary);line-height:1.3}
+.home-redesign .dashboard-date-tile>strong{font-size:1.125rem;font-weight:600;line-height:1.15}
+.home-redesign .dashboard-row-copy{min-width:0}
+.home-redesign .dashboard-row-copy>strong{display:block;font-size:var(--font-body);font-weight:500;line-height:1.35;overflow-wrap:anywhere}
+.home-redesign .dashboard-row-copy>small{display:block;margin-top:3px;font-size:var(--font-caption);color:var(--secondary);line-height:1.35;overflow-wrap:anywhere}
+.home-redesign .dashboard-row .status{font-size:var(--font-caption);font-weight:500;line-height:1.4;color:var(--secondary);text-align:right;overflow-wrap:anywhere}
+.home-redesign .dashboard-row .status.complete{color:var(--success)}
+.home-redesign .dashboard-record-icon{display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:10px;background:var(--raised);color:var(--secondary)}
+.home-redesign .dashboard-record-icon.complete{background:var(--success-soft);color:var(--success)}
+.home-redesign .dashboard-empty{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:20px 4px;text-align:center;gap:8px;color:var(--secondary)}
+.home-redesign .dashboard-empty>p{font-size:var(--font-body);font-weight:500;color:var(--text);line-height:1.4}
+.home-redesign .dashboard-empty>small{font-size:var(--font-caption);line-height:1.5}
+.home-redesign .home-session-footer{padding:12px var(--home-pad);border-top:1px solid var(--line);flex-shrink:0}
+.home-redesign .dashboard-start{width:100%;min-height:48px;border-radius:12px;font-size:var(--font-body);gap:8px}
+.home-redesign .home-discard{width:100%;margin-top:4px;font-size:var(--font-label)}
+@media(min-width:821px) and (max-height:680px){
+  .home-redesign .current-plan .home-plan-header,.home-redesign .calendar-module .home-week-header{padding-top:6px;min-height:52px}
+  .home-redesign .plan-name{font-size:1.4rem}
+  .home-redesign .home-plan-meta{margin-top:4px}
+  .home-redesign .plan-card-scroll{padding-bottom:6px}
+  .home-redesign .home-metrics{margin:8px 0 6px;gap:8px}
+  .home-redesign .home-metrics>div{gap:2px}
+  .home-redesign .home-metrics strong{font-size:1.375rem}
+  .home-redesign .home-contents{margin-top:8px}
+  .home-redesign .home-movement-grid{margin-top:6px;--flow-gap:36px}
+  .home-redesign .outline-row{padding-block:2px}
+  .home-redesign .home-movement-grid[data-density=regular],.home-redesign .home-movement-grid[data-density=medium]{--movement-row:32px}
+  .home-redesign .dashboard-focus{padding:12px 14px}
+  .home-redesign .next-date h3{font-size:1.375rem;margin-top:6px}
+  .home-redesign .dashboard-focus-detail{margin-top:6px}
+  .home-redesign .dashboard-week-stats{margin:12px 0}
+  .home-redesign .dashboard-week-stats strong{font-size:1.375rem}
+  .home-redesign .dashboard-row{min-height:46px;padding-block:3px}
+  .home-redesign .dashboard-list{gap:4px;margin-top:6px}
+}
+@media(max-width:820px){
+  .home-redesign{--home-pad:14px}
+  .home-redesign .current-plan .home-plan-header,.home-redesign .calendar-module .home-week-header{padding-top:6px;min-height:52px}
+  .home-redesign .plan-name{font-size:1.3rem}
+  .home-redesign .home-metrics{margin-top:12px}
+  .home-redesign .home-metrics strong{font-size:1.25rem}
+  .home-redesign .home-metrics>div+div{padding-left:8px}
+  .home-redesign .home-movement-grid{grid-template-columns:minmax(0,1fr);padding-inline:0}
+  .home-redesign .home-movement-grid[data-density=regular],.home-redesign .home-movement-grid[data-density=medium]{--movement-row:34px}
+  .home-redesign .home-movement-grid[data-density=few]{grid-auto-rows:minmax(44px,auto)}
+  .home-redesign .home-contents{margin-top:12px}
+  .home-redesign .home-plan-footer,.home-redesign .home-session-footer{padding:10px var(--home-pad)}
+  .home-redesign .dashboard-focus{padding:12px}
+  .home-redesign .next-date h3{font-size:1.25rem}
+  .home-redesign .dashboard-row{gap:8px}
+}
