@@ -32,7 +32,7 @@ export function TrainingTimeline({session}:{session:Session}){
     <ol className="training-sequence" ref={list} aria-label="按顺序排列的跟练动作">
       {session.stages.map((stage,index)=><li className={`follow-step ${index===session.index?'current':''} ${index<session.index?'past':''}`} aria-current={index===session.index?'step':undefined} data-flow-node={stage.id} key={stage.id}>
         <span className="step-marker">{session.completed.includes(stage.id)?<Icon name="check" size={16}/>:String(index+1).padStart(2,'0')}</span>
-        <div><strong>{stage.name}</strong><small>{stage.mode==='time'?durationLabel(stage.seconds):stage.reps+' 次'}{stage.weight>0?' · '+stage.weight+' kg':''}{stage.sets>1&&!stage.isRest?` · ${stage.set}/${stage.sets} 组`:''}</small>{session.skipped.includes(stage.id)&&<span className="step-status">已跳过</span>}</div>
+        <div><strong>{stage.name}</strong><small>{stage.mode==='time'?durationLabel(stage.seconds):stage.reps+' 次'}{stage.weight>0?' · '+stage.weight+' kg':''}{stage.groupKind&&!stage.isRest?' · 第 '+stage.round+'/'+stage.rounds+' 轮':stage.sets>1&&!stage.isRest?' · '+stage.set+'/'+stage.sets+' 组':''}{stage.setKind==='warmup'&&!stage.isRest?' · 热身':''}</small>{session.skipped.includes(stage.id)&&<span className="step-status">已跳过</span>}</div>
       </li>)}
       <FlowConnections hostRef={list} layoutKey={session.id}/>
     </ol>

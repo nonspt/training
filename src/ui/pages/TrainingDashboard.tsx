@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import type {Plan,State} from '../../domain/types.ts';
 import {addDays,dateLabel,durationLabel,monday,nextTraining,schedule,today} from '../../domain/plans.ts';
+import {routineForDate} from '../../domain/program.ts';
 import {Icon} from '../components/Icon.tsx';
 
 type DashboardProps={plan:Plan;state:State;busy:boolean;total:number;
@@ -19,6 +20,7 @@ export function TrainingDashboard({plan,state,busy,total,onStart,onResume,onDisc
   const workouts=state.workouts.filter(w=>w.planId===plan.id);
   const completed=new Set(workouts.filter(w=>w.completed).map(w=>w.scheduledDate));
   const next=nextTraining(plan,workouts,date),focusDate=state.draft?.scheduledDate??next;
+  const focusRoutine=routineForDate(plan,focusDate??plan.startDate);
   const thisWeek=dates.filter(d=>d>=start&&d<=end);
   const weekDone=thisWeek.filter(d=>completed.has(d)).length;
   const recorded=workouts.map(workout=>({workout,date:localDate.format(new Date(workout.finishedAt))}));
@@ -41,7 +43,7 @@ export function TrainingDashboard({plan,state,busy,total,onStart,onResume,onDisc
         </div>
         <div className="next-date"><h3>{focusDate?dateLabel(focusDate):'本轮训练已完成'}</h3></div>
         <p className="dashboard-focus-detail"><Icon name={state.draft?'pause':focusDate?'clock':'check'} size={16}/>
-          {state.draft?`已跟练 ${durationLabel(state.draft.elapsed)} · 第 ${Math.min(state.draft.index+1,state.draft.stages.length)} / ${state.draft.stages.length} 段`:focusDate?`预计 ${durationLabel(total)} · ${plan.items.length} 个动作`:`已完成 ${dates.filter(d=>completed.has(d)).length} 次训练`}
+          {state.draft?`已跟练 ${durationLabel(state.draft.elapsed)} · 第 ${Math.min(state.draft.index+1,state.draft.stages.length)} / ${state.draft.stages.length} 段`:focusDate?`预计 ${durationLabel(total)} · ${focusRoutine.items.length} 个动作${plan.dayPlans?' · '+focusRoutine.name:''}`:`已完成 ${dates.filter(d=>completed.has(d)).length} 次训练`}
         </p>
       </section>
 
@@ -60,14 +62,14 @@ export function TrainingDashboard({plan,state,busy,total,onStart,onResume,onDisc
         {content==='schedule'?<ul className="schedule-list dashboard-list" aria-label="接下来的训练安排">
           {upcoming.map(d=><li className="schedule-row dashboard-row" key={d}>
             <span className="dashboard-date-tile" aria-hidden="true"><small>{Number(d.slice(5,7))}月</small><strong>{Number(d.slice(8))}</strong></span>
-            <div className="dashboard-row-copy"><strong>{dateLabel(d)}</strong><small>{d<date?'原训练日，可按需补练':'训练日'}</small></div>
+            <div className="dashboard-row-copy"><strong>{dateLabel(d)}</strong><small>{plan.dayPlans?routineForDate(plan,d).name:d<date?'原训练日，可按需补练':'训练日'}</small></div>
             <span className="status">{distanceLabel(d,date)}</span>
           </li>)}
           {!upcoming.length&&<li className="dashboard-empty"><Icon name={focusDate?'calendar':'check'} size={26}/><p>{focusDate?'这是本轮最后一次训练':'本轮安排已全部完成'}</p><small>{focusDate?'完成后即可结束本轮计划':'可编辑计划，安排下一轮训练'}</small></li>}
         </ul>:<ul className="dashboard-list" aria-label="最近三次跟练记录">
           {history.map(({workout:w,date:d})=><li className="dashboard-row" key={w.id}>
             <span className={'dashboard-record-icon '+(w.completed?'complete':'')}><Icon name={w.completed?'check':'history'} size={20}/></span>
-            <div className="dashboard-row-copy"><strong>{dateLabel(d)}</strong><small>实际跟练 {durationLabel(w.elapsed)}</small></div>
+            <div className="dashboard-row-copy"><strong>{dateLabel(d)}</strong><small>{w.dayName?w.dayName+' · ':''}实际跟练 {durationLabel(w.elapsed)}</small></div>
             <span className={'status '+(w.completed?'complete':'')}>{w.completed?'已完成':'部分训练'}</span>
           </li>)}
           {!history.length&&<li className="dashboard-empty"><Icon name="history" size={26}/><p>还没有跟练记录</p><small>保存训练后，在这里查看实际用时</small></li>}

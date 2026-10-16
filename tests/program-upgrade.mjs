@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import http from 'node:http';
+import path from 'node:path';
+import {chromium} from 'playwright-core';
+const original=await fs.readFile('dist/sw.js','utf8'),legacy=original.replace(/const BUILD="([^"]+)"/,(_,build)=>'const BUILD="'+build+'-legacy-qa"').replace("if(event.data?.type==='STORAGE_FORMAT')event.ports[0]?.postMessage({schemaVersion:2});",'');
+assert.notEqual(legacy,original);
+let servedWorker=legacy;const root=path.resolve('dist'),types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.webmanifest':'application/manifest+json'};
+const server=http.createServer(async(req,res)=>{try{const pathname=new URL(req.url,'http://localhost').pathname,file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(root+path.sep)){res.writeHead(403);res.end();return;}const body=pathname==='/sw.js'?servedWorker:await fs.readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'});res.end(body);}catch{res.writeHead(404);res.end();}});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url='http://127.0.0.1:'+server.address().port+'/';
+const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true}),context=await browser.newContext({viewport:{width:1133,height:744}}),page=await context.newPage(),errors=[],results=[];
+page.on('pageerror',e=>errors.push(e.message));
+const read=()=>page.evaluate(()=>new Promise(resolve=>{const r=indexedDB.open('training-follow-db',1);r.onsuccess=()=>{const db=r.result,q=db.transaction('state').objectStore('state').get('current');q.onsuccess=()=>{resolve(q.result);db.close();};};}));
+try{
+ servedWorker=legacy;await page.goto(url);
+ await page.locator('[data-exercise=march]').click();await page.getByRole('button',{name:'完成设计',exact:true}).click();await page.getByRole('button',{name:'进入跟练',exact:true}).waitFor();
+ await page.evaluate(()=>navigator.serviceWorker.ready);await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
+ assert.equal((await read()).schemaVersion,1);
+ await page.getByRole('button',{name:'进入跟练',exact:true}).click();await page.getByRole('button',{name:'开始跟练',exact:true}).click();await page.getByRole('button',{name:'暂停训练',exact:true}).click();await page.getByRole('button',{name:'保存进度并返回首页'}).click();
+ const draft=(await read()).draft;
+ servedWorker=original;await page.evaluate(async()=>{const r=await navigator.serviceWorker.ready;await r.update();});await page.waitForFunction(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting);
+ await page.getByRole('button',{name:'打开设置'}).click();assert.equal(await page.getByRole('button',{name:'结束跟练后可更新',exact:true}).isDisabled(),true);await page.getByRole('button',{name:'关闭设置'}).click();assert.deepEqual((await read()).draft,draft);
+ results.push('模拟旧离线worker时保留v1数据及未结束快照，新worker等待且有草稿时不更新');
+ page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'丢弃未完成跟练'}).click();await page.getByRole('button',{name:'进入跟练',exact:true}).waitFor();
+ const before=await read();await page.getByRole('button',{name:'编辑计划',exact:true}).click();await page.getByRole('button',{name:'启用分日编排',exact:true}).click();await page.getByRole('button',{name:'保存修改',exact:true}).click();
+ await page.getByRole('alert').filter({hasText:'离线资源仍是旧版'}).waitFor();assert.deepEqual(await read(),before);
+ results.push('旧离线worker尚未更新时拒绝写入v2，明确提示更新并保留原计划与revision');
+ await page.getByRole('button',{name:'取消',exact:true}).click();await page.getByRole('button',{name:'打开设置'}).click();await page.getByRole('button',{name:'更新应用',exact:true}).click();await page.getByRole('button',{name:'进入跟练',exact:true}).waitFor();
+ await page.getByRole('button',{name:'编辑计划',exact:true}).click();await page.getByRole('button',{name:'启用分日编排',exact:true}).click();await page.getByRole('button',{name:'保存修改',exact:true}).click();await page.getByRole('button',{name:'进入跟练',exact:true}).waitFor();assert.equal((await read()).schemaVersion,2);assert.equal(await page.evaluate(async()=>(await caches.keys()).filter(k=>k.startsWith('training-follow-')).length),1);
+ await context.setOffline(true);await page.reload();await page.getByRole('button',{name:'进入跟练',exact:true}).waitFor();await page.getByText('离线可用',{exact:true}).waitFor();await page.getByRole('button',{name:'进入跟练',exact:true}).click();await page.getByRole('button',{name:'开始跟练',exact:true}).waitFor();assert.ok((await read()).draft.dayName);
+ results.push('主动更新后允许保存v2；离线重开可读取分日计划并启动对应跟练');
+ assert.deepEqual(errors,[]);await fs.writeFile('test-results/program-upgrade-report.json',JSON.stringify({results,errors},null,2));console.log(JSON.stringify({passed:results.length,results,errors},null,2));
+}catch(e){await page.screenshot({path:'test-results/program-upgrade-failure.png'});throw e;}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

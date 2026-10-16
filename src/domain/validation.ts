@@ -1,5 +1,6 @@
 import {EFFORT_MIN,EFFORT_MAX} from './training-targets.ts';
-import type {Category,Plan,PlanItem,Session,Stage,State,TargetMode,Workout} from './types.ts';
+import type {Category,DayPlan,Plan,PlanGroup,PlanItem,Session,SetTarget,Stage,State,TargetMode,Workout} from './types.ts';
+import {hasAdvancedState} from './program.ts';
 import {exercises} from '../content/exercises.ts';
 function fail(message:string):never{throw new Error(message);}
 const obj=(v:unknown):Record<string,unknown>=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:fail('数据结构无法识别。');
@@ -11,11 +12,52 @@ const stamp=(v:unknown)=>{const s=str(v,32);if(!Number.isFinite(Date.parse(s)))f
 const mode=(v:unknown):TargetMode=>v==='time'||v==='reps'?v:fail('动作计量方式无效。');
 const category=(v:unknown):Category=>v==='warmup'||v==='cardio'||v==='strength'||v==='core'||v==='recovery'?v:fail('动作分类无效。');
 function unique(ids:string[]){if(new Set(ids).size!==ids.length)fail('数据包含重复标识。');}
-export function validateItem(raw:unknown):PlanItem{const v=obj(raw),exercise=exercises.find(e=>e.id===v.exerciseId);if(!exercise)fail('计划包含未支持的动作。');const result:PlanItem={id:str(v.id),exerciseId:exercise.id,mode:mode(v.mode),seconds:num(v.seconds,5,exercise.category==='cardio'?1800:600,true),reps:num(v.reps,0,50,true),weight:num(v.weight,0,exercise.maxWeight??50),sets:num(v.sets,1,10,true),rest:num(v.rest,0,180,true),effort:num(v.effort,EFFORT_MIN,EFFORT_MAX,true)};if(result.seconds%5!==0||result.rest%5!==0||result.weight*2%1!==0)fail('动作参数不符合调节步长。');if(result.mode==='reps'&&(!exercise.countable||result.reps<1))fail('该动作不支持计次。');if(!exercise.weighted&&result.weight!==0)fail('该动作不支持负重。');return result;}
-export function validatePlan(raw:unknown):Plan{const v=obj(raw);const type=v.type;if(type!=='aerobic'&&type!=='strength'&&type!=='mixed')fail('训练类型无效。');const days=list(v.days,7).map(d=>num(d,0,6,true));unique(days.map(String));if(!days.length)fail('请选择至少一个训练日。');const items=list(v.items,100).map(validateItem);unique(items.map(i=>i.id));if(!items.length)fail('请先添加一个动作。');return {id:str(v.id),name:str(v.name,60).trim()||fail('请填写计划名称。'),type,weeks:num(v.weeks,1,52,true),days,startDate:date(v.startDate),items,createdAt:stamp(v.createdAt),updatedAt:stamp(v.updatedAt),version:num(v.version,1,100000,true)};}
-function validateStage(raw:unknown):Stage{const v=obj(raw);if(typeof v.isRest!=='boolean')fail('训练阶段状态无效。');return {id:str(v.id),itemId:str(v.itemId),name:str(v.name,60),category:category(v.category),mode:mode(v.mode),seconds:num(v.seconds,5,3600,true),reps:num(v.reps,0,100,true),weight:num(v.weight,0,200),effort:num(v.effort,EFFORT_MIN,EFFORT_MAX,true),set:num(v.set,1,10,true),sets:num(v.sets,1,10,true),cue:str(v.cue,300),equipment:str(v.equipment,80),isRest:v.isRest};}
-export function validateSession(raw:unknown):Session{const v=obj(raw),stages=list(v.stages,1900).map(validateStage);if(!stages.length)fail('训练内容为空。');unique(stages.map(s=>s.id));const completed=list(v.completed,1900).map(x=>str(x)),skipped=list(v.skipped,1900).map(x=>str(x)),index=num(v.index,0,stages.length,true);unique([...completed,...skipped]);if(index!==completed.length+skipped.length||[...completed,...skipped].some(id=>!stages.slice(0,index).some(s=>s.id===id)))fail('跟练进度无效。');return {id:str(v.id),planId:str(v.planId),planName:str(v.planName,60),scheduledDate:date(v.scheduledDate),stages,index,stageElapsed:num(v.stageElapsed,0,604800),elapsed:num(v.elapsed,0,604800),completed,skipped,createdAt:stamp(v.createdAt),updatedAt:stamp(v.updatedAt),version:num(v.version,1,1000000,true)};}
-function validateWorkout(raw:unknown):Workout{const v=obj(raw);if(typeof v.completed!=='boolean')fail('记录状态无效。');const totalStages=num(v.totalStages,1,1900,true);if(v.completed&&v.completedStages!==totalStages)fail('完成记录与训练段数量不一致。');return {id:str(v.id),planId:str(v.planId),planName:str(v.planName,60),scheduledDate:date(v.scheduledDate),finishedAt:stamp(v.finishedAt),elapsed:num(v.elapsed,0,604800),completed:v.completed,completedStages:num(v.completedStages,0,totalStages,true),totalStages,confirmedReps:num(v.confirmedReps,0,1000000,true)};}
-export function validateState(raw:unknown):State{const v=obj(raw);if(v.schemaVersion!==1)fail('不支持此数据版本，请使用本应用的备份。');if(typeof v.onboarded!=='boolean')fail('初始化状态无效。');const plans=list(v.plans,30).map(validatePlan),workouts=list(v.workouts,10000).map(validateWorkout),draft=v.draft===null?null:validateSession(v.draft);unique(plans.map(p=>p.id));unique(workouts.map(w=>w.id));const activePlanId=v.activePlanId===null?null:str(v.activePlanId);if(activePlanId&&!plans.some(p=>p.id===activePlanId)||draft&&!plans.some(p=>p.id===draft.planId)||workouts.some(w=>!plans.some(p=>p.id===w.planId)))fail('数据中的计划关联无效。');return {schemaVersion:1,revision:num(v.revision,0,100000000,true),onboarded:v.onboarded,activePlanId,plans,draft,workouts};}
-export interface Backup {app:'training-follow';schemaVersion:1;exportedAt:string;state:State}
-export function parseBackup(text:string):Backup{if(new TextEncoder().encode(text).byteLength>5*1024*1024)fail('备份文件超过 5 MB。');let raw:unknown;try{raw=JSON.parse(text);}catch{fail('文件不是有效的 JSON 备份。');}const v=obj(raw);if(v.app!=='training-follow'||v.schemaVersion!==1)fail('请选择训练跟练的 v1 备份。');return {app:'training-follow',schemaVersion:1,exportedAt:stamp(v.exportedAt),state:validateState(v.state)};}
+export function validateItem(raw:unknown):PlanItem{
+  const v=obj(raw),exercise=exercises.find(e=>e.id===v.exerciseId);if(!exercise)fail('计划包含未支持的动作。');
+  const result:PlanItem={id:str(v.id),exerciseId:exercise.id,mode:mode(v.mode),seconds:num(v.seconds,5,exercise.category==='cardio'?1800:600,true),reps:num(v.reps,0,50,true),weight:num(v.weight,0,exercise.maxWeight??50),sets:num(v.sets,1,10,true),rest:num(v.rest,0,180,true),effort:num(v.effort,EFFORT_MIN,EFFORT_MAX,true)};
+  if(result.seconds%5!==0||result.rest%5!==0||result.weight*2%1!==0)fail('动作参数不符合调节步长。');
+  if(result.mode==='reps'&&(!exercise.countable||result.reps<1))fail('该动作不支持计次。');if(!exercise.weighted&&result.weight!==0)fail('该动作不支持负重。');
+  if(v.setTargets!==undefined){
+    const targets=list(v.setTargets,10);if(targets.length!==result.sets)fail('逐组设置数量与组数不一致。');
+    result.setTargets=targets.map(raw=>{
+      const target=obj(raw);if(target.kind!=='warmup'&&target.kind!=='work')fail('训练组类型无效。');
+      const valid=validateItem({...result,...target,id:result.id,exerciseId:result.exerciseId,mode:result.mode,sets:1,setTargets:undefined});
+      return {kind:target.kind,seconds:valid.seconds,reps:valid.reps,weight:valid.weight,rest:valid.rest,effort:valid.effort} as SetTarget;
+    });
+  }
+  return result;
+}
+function validateRoutine(v:Record<string,unknown>){
+  const items=list(v.items,100).map(validateItem);unique(items.map(i=>i.id));if(!items.length)fail('每个训练日都需要至少一个动作。');
+  const result:{items:PlanItem[];groups?:PlanGroup[]}={items};
+  if(v.groups!==undefined){
+    result.groups=list(v.groups,50).map(raw=>{
+      const g=obj(raw);if(g.kind!=='superset'&&g.kind!=='circuit')fail('动作组合类型无效。');
+      const itemIds=list(g.itemIds,10).map(id=>str(id));unique(itemIds);
+      if(itemIds.length<2||g.kind==='superset'&&itemIds.length!==2)fail('超级组需要两个动作，循环组需要至少两个动作。');
+      const start=items.findIndex(i=>i.id===itemIds[0]),rounds=num(g.rounds,1,10,true),rest=num(g.rest,0,180,true),transitionRest=num(g.transitionRest,0,180,true);
+      if(start<0||itemIds.some((id,n)=>items[start+n]?.id!==id)||itemIds.some(id=>items.find(i=>i.id===id)?.sets!==rounds))fail('组合动作必须连续，且组数与轮数一致。');
+      if(rest%5||transitionRest%5)fail('组合休息时间不符合调节步长。');
+      return {id:str(g.id),kind:g.kind,itemIds,rounds,rest,transitionRest} as PlanGroup;
+    });
+    unique(result.groups.map(g=>g.id));unique(result.groups.flatMap(g=>g.itemIds));
+  }
+  return result;
+}
+export function validatePlan(raw:unknown):Plan{
+  const v=obj(raw),type=v.type;if(type!=='aerobic'&&type!=='strength'&&type!=='mixed')fail('训练类型无效。');
+  const days=list(v.days,7).map(d=>num(d,0,6,true));unique(days.map(String));if(!days.length)fail('请选择至少一个训练日。');
+  const result:Plan={id:str(v.id),name:str(v.name,60).trim()||fail('请填写计划名称。'),type,weeks:num(v.weeks,1,52,true),days,startDate:date(v.startDate),...validateRoutine(v),createdAt:stamp(v.createdAt),updatedAt:stamp(v.updatedAt),version:num(v.version,1,100000,true)};
+  if(v.dayPlans!==undefined){
+    result.dayPlans=list(v.dayPlans,7).map(raw=>{const d=obj(raw);return {day:num(d.day,0,6,true),name:str(d.name,24).trim()||fail('请填写训练日方案名称。'),...validateRoutine(d)} as DayPlan;});
+    unique(result.dayPlans.map(d=>String(d.day)));
+    if(result.dayPlans.length!==days.length||result.dayPlans.some(d=>!days.includes(d.day)))fail('训练日与分日方案不一致。');
+  }
+  return result;
+}
+function validateStage(raw:unknown):Stage{const v=obj(raw);if(typeof v.isRest!=='boolean')fail('训练阶段状态无效。');return {id:str(v.id),itemId:str(v.itemId),name:str(v.name,60),category:category(v.category),mode:mode(v.mode),seconds:num(v.seconds,5,3600,true),reps:num(v.reps,0,100,true),weight:num(v.weight,0,200),effort:num(v.effort,EFFORT_MIN,EFFORT_MAX,true),set:num(v.set,1,10,true),sets:num(v.sets,1,10,true),cue:str(v.cue,300),equipment:str(v.equipment,80),isRest:v.isRest,...(v.setKind!==undefined?{setKind:v.setKind==='warmup'||v.setKind==='work'?v.setKind:fail('训练组类型无效。')}:{}),...(v.groupKind!==undefined?{groupKind:v.groupKind==='superset'||v.groupKind==='circuit'?v.groupKind:fail('动作组合类型无效。'),round:num(v.round,1,10,true),rounds:num(v.rounds,1,10,true)}:{})};}
+export function validateSession(raw:unknown):Session{const v=obj(raw),stages=list(v.stages,2000).map(validateStage);if(!stages.length)fail('训练内容为空。');unique(stages.map(s=>s.id));const completed=list(v.completed,2000).map(x=>str(x)),skipped=list(v.skipped,2000).map(x=>str(x)),index=num(v.index,0,stages.length,true);unique([...completed,...skipped]);if(index!==completed.length+skipped.length||[...completed,...skipped].some(id=>!stages.slice(0,index).some(s=>s.id===id)))fail('跟练进度无效。');return {id:str(v.id),planId:str(v.planId),planName:str(v.planName,60),...(v.dayName!==undefined?{dayName:str(v.dayName,24)}:{}),scheduledDate:date(v.scheduledDate),stages,index,stageElapsed:num(v.stageElapsed,0,604800),elapsed:num(v.elapsed,0,604800),completed,skipped,createdAt:stamp(v.createdAt),updatedAt:stamp(v.updatedAt),version:num(v.version,1,1000000,true)};}
+function validateWorkout(raw:unknown):Workout{const v=obj(raw);if(typeof v.completed!=='boolean')fail('记录状态无效。');const totalStages=num(v.totalStages,1,2000,true);if(v.completed&&v.completedStages!==totalStages)fail('完成记录与训练段数量不一致。');return {id:str(v.id),planId:str(v.planId),planName:str(v.planName,60),...(v.dayName!==undefined?{dayName:str(v.dayName,24)}:{}),scheduledDate:date(v.scheduledDate),finishedAt:stamp(v.finishedAt),elapsed:num(v.elapsed,0,604800),completed:v.completed,completedStages:num(v.completedStages,0,totalStages,true),totalStages,confirmedReps:num(v.confirmedReps,0,1000000,true)};}
+export function validateState(raw:unknown):State{const v=obj(raw);if(v.schemaVersion!==1&&v.schemaVersion!==2)fail('不支持此数据版本，请使用兼容版本打开，原数据未改变。');if(typeof v.onboarded!=='boolean')fail('初始化状态无效。');const plans=list(v.plans,30).map(validatePlan),workouts=list(v.workouts,10000).map(validateWorkout),draft=v.draft===null?null:validateSession(v.draft);unique(plans.map(p=>p.id));unique(workouts.map(w=>w.id));const activePlanId=v.activePlanId===null?null:str(v.activePlanId);if(activePlanId&&!plans.some(p=>p.id===activePlanId)||draft&&!plans.some(p=>p.id===draft.planId)||workouts.some(w=>!plans.some(p=>p.id===w.planId)))fail('数据中的计划关联无效。');return {schemaVersion:v.schemaVersion===2||hasAdvancedState({plans,draft,workouts})?2:1,revision:num(v.revision,0,100000000,true),onboarded:v.onboarded,activePlanId,plans,draft,workouts};}
+export interface Backup {app:'training-follow';schemaVersion:1|2;exportedAt:string;state:State}
+export function parseBackup(text:string):Backup{if(new TextEncoder().encode(text).byteLength>5*1024*1024)fail('备份文件超过 5 MB。');let raw:unknown;try{raw=JSON.parse(text);}catch{fail('文件不是有效的 JSON 备份。');}const v=obj(raw);if(v.app!=='training-follow'||(v.schemaVersion!==1&&v.schemaVersion!==2))fail('请选择训练跟练的 v1 或 v2 备份。');return {app:'training-follow',schemaVersion:2,exportedAt:stamp(v.exportedAt),state:validateState(v.state)};}

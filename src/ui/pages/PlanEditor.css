@@ -1,0 +1,35 @@
+/* Advanced editing keeps both module frames fixed; only their contents scroll. */
+.compact-editor .plan-name-row{display:flex;gap:6px;align-items:center}
+.compact-editor .plan-name-row .name-field{flex:1;min-width:0}
+.compact-editor .daily-toggle{min-height:32px;padding:3px 9px;border:1px solid var(--line);border-radius:8px;background:var(--raised);font-size:var(--font-caption);flex-shrink:0}
+.compact-editor .daily-toggle.selected{background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent-ink)}
+.compact-editor .day-plan-bar{display:grid;grid-template-columns:82px minmax(80px,1fr) 100px;gap:6px;margin-top:5px}
+.compact-editor .day-plan-bar input,.compact-editor .day-plan-bar select{min-width:0;min-height:30px;padding:3px 6px;font-size:var(--font-label);border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--text)}
+.compact-editor .day-plan-bar input{font-size:1rem}
+.compact-editor .set-mode-row{display:flex;justify-content:space-between;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:3px}
+.compact-editor .set-target-editor{padding-top:3px}
+.compact-editor .set-table{max-height:140px;border:1px solid var(--line);border-radius:8px;margin-bottom:4px;scrollbar-width:thin}
+.compact-editor .set-table-head,.compact-editor .set-table-row{display:grid;grid-template-columns:26px 44px repeat(var(--set-fields),minmax(0,1fr));gap:3px;align-items:center;text-align:center;font-size:var(--font-caption)}
+.compact-editor .set-table-head{position:sticky;top:0;background:var(--surface);color:var(--secondary);padding:4px;z-index:1}
+.compact-editor .set-table-row{padding:3px 4px;border-top:1px solid var(--line)}
+.compact-editor .set-table-row.editing{background:var(--accent-soft)}
+.compact-editor .set-table-row button{min-height:28px;min-width:0;padding:2px;border:1px solid transparent;border-radius:5px;background:var(--raised);font-size:var(--font-label);font-variant-numeric:tabular-nums}
+.compact-editor .set-table-row button[aria-pressed=true]{border-color:var(--accent-ink);color:var(--accent-ink)}
+.compact-editor .set-table-row button small{margin-left:2px;font-size:var(--font-caption);color:var(--secondary)}
+.compact-editor .set-target-editor>.range-field{grid-template-columns:6em minmax(32px,1fr) 4.6em}
+.compact-editor .combine-toggle{margin-right:auto;white-space:nowrap}
+.compact-editor .group-builder{padding:8px;border:1px solid var(--line);background:var(--accent-soft);border-radius:8px;font-size:var(--font-label)}
+.compact-editor .group-builder>div{display:flex;gap:6px;margin-top:5px}
+.compact-editor .group-builder .secondary{min-height:30px;padding:3px 8px;font-size:var(--font-caption)}
+.compact-editor .plan-group{background:var(--accent-soft);border:1px solid var(--accent-ink);border-radius:8px;margin-bottom:4px;overflow:hidden}
+.compact-editor .group-heading{display:flex;align-items:center;gap:8px;background:transparent;width:100%;text-align:left;min-height:30px;padding:4px 8px;font-size:var(--font-label);color:var(--accent-ink)}
+.compact-editor .group-heading span{flex:1;font-size:var(--font-caption);color:var(--secondary)}
+.compact-editor .group-settings{padding:0 8px 4px}
+.compact-editor .group-settings .range-field{grid-template-columns:5em minmax(30px,1fr) 3.8em}
+.compact-editor .group-setting-actions{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line)}
+.compact-editor .group-member .plan-item{border-left:3px solid var(--accent-ink)}
+.compact-editor .plan-item-heading>input[type=checkbox]{width:26px;height:26px;min-height:26px;margin:0 5px;accent-color:var(--accent-ink);flex-shrink:0}
+.home-routine-label{display:inline-flex;align-items:center;color:var(--accent-ink);background:var(--accent-soft);border-radius:7px;padding:3px 8px;font-size:var(--font-label);margin-top:6px}
+@media(max-width:540px){.compact-editor .day-plan-bar{grid-template-columns:72px minmax(70px,1fr)}.compact-editor .day-plan-bar select:last-child{grid-column:1/-1}.compact-editor .set-table-head,.compact-editor .set-table-row{grid-template-columns:22px 36px repeat(var(--set-fields),minmax(0,1fr));gap:2px}.compact-editor .set-table-row button small{display:none}.compact-editor .set-table-row button{font-size:var(--font-caption)}}
+
+.compact-editor .per-set-item .item-setting-scroll{max-height:clamp(100px,calc(var(--plan-scroll-height,400px) - 110px),380px)}

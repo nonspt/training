@@ -16,7 +16,7 @@ export function FollowDetails({session}:{session:Session}){
 
   return <aside className="follow-targets follow-details">
     <section className="module target-card internal-scroll" aria-label="当前训练目标">
-      <div className="detail-card-header"><h3>{label}</h3><span className="detail-badge">{!current?'本次汇总':current.isRest?'恢复':current.sets>1?`${current.set} / ${current.sets} 组`:categoryNames[current.category]}</span></div>
+      <div className="detail-card-header"><h3>{label}</h3><span className="detail-badge">{!current?'本次汇总':current.isRest?'恢复':current.groupKind?'第 '+current.round+' / '+current.rounds+' 轮':current.sets>1?`${current.set} / ${current.sets} 组`:categoryNames[current.category]}</span></div>
       <div className="target-reading"><strong>{reading[0]}</strong><span>{reading.slice(1).join(' ')}</span></div>
       {exertion&&<div className="effort-meter" role="meter" aria-label="计划主观用力目标" aria-valuemin={1} aria-valuemax={EFFORT_MAX} aria-valuenow={current.effort}>
         {Array.from({length:EFFORT_MAX},(_,i)=><span key={i} className={i<current.effort?'filled':''}/>)}
@@ -36,7 +36,7 @@ export function FollowDetails({session}:{session:Session}){
       <div className="detail-card-header"><h3>{next?'下一环节':current?'最后一环节':'训练回顾'}</h3>{next&&<span className="detail-badge">{session.index+2} / {session.stages.length}</span>}</div>
       {next?<>
         <strong className="next-movement">{next.name}</strong>
-        <span className="next-value">{target(next)}{next.weight>0?' · '+next.weight+' kg':''}{next.sets>1&&!next.isRest?` · 第 ${next.set} / ${next.sets} 组`:''}</span>
+        <span className="next-value">{target(next)}{next.weight>0?' · '+next.weight+' kg':''}{next.groupKind&&!next.isRest?' · 第 '+next.round+' / '+next.rounds+' 轮':next.sets>1&&!next.isRest?' · 第 '+next.set+' / '+next.sets+' 组':''}{next.setKind==='warmup'&&!next.isRest?' · 热身组':''}</span>
         {next.effort>0&&<p className="next-effort"><span>主观用力</span><strong>{next.effort} / {EFFORT_MAX}</strong></p>}
         <p className="next-equipment"><Icon name="train" size={16}/><span>{next.equipment}</span></p>
         <p className="next-preparation">{next.cue}</p>

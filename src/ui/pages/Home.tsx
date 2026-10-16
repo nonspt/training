@@ -1,7 +1,8 @@
 import {useRef} from 'react';
 import type {Plan,State} from '../../domain/types.ts';
 import {categoryNames,typeNames} from '../../domain/types.ts';
-import {buildStages,durationLabel,estimateItem,schedule,today,weekIndex} from '../../domain/plans.ts';
+import {buildStages,durationLabel,estimateStages,nextTraining,schedule,today,weekIndex} from '../../domain/plans.ts';
+import {routineForDate} from '../../domain/program.ts';
 import {exercises} from '../../content/exercises.ts';
 import {Icon} from '../components/Icon.tsx';
 import {FlowConnections} from '../components/FlowConnections.tsx';
@@ -28,9 +29,11 @@ export function Home({state,busy,onCreate,onEdit,onStart,onResume,onDiscard}:Hom
   const dates=schedule(plan);
   const doneDates=new Set(state.workouts.filter(w=>w.planId===plan.id&&w.completed).map(w=>w.scheduledDate));
   const done=dates.filter(d=>doneDates.has(d)).length;
-  const total=plan.items.reduce((n,item)=>n+estimateItem(item),0);
+  const focusDate=state.draft?.scheduledDate??nextTraining(plan,state.workouts,date)??plan.startDate;
+  const routine=routineForDate(plan,focusDate);
+  const stages=state.draft?.stages??buildStages(plan,exercises,focusDate);
+  const total=estimateStages(stages);
   const estimated=durationLabel(total).split(' ');
-  const stages=buildStages(plan,exercises);
   const movementDensity=stages.length<=3?'few':stages.length<=6?'medium':stages.length<=10?'regular':'dense';
   const completion=Math.round(done/Math.max(1,dates.length)*100);
 
@@ -42,8 +45,8 @@ export function Home({state,busy,onCreate,onEdit,onStart,onResume,onDiscard}:Hom
       </header>
       <div className="plan-card-scroll internal-scroll home-plan-scroll" tabIndex={0} aria-label="当前计划内容">
         <div className="home-plan-identity">
-          <h2 className="plan-name">{plan.name}</h2>
-          <p className="home-plan-meta"><span>{typeNames[plan.type]}</span><span>第 {weekIndex(plan,date)+1} / {plan.weeks} 周</span><span>每周 {plan.days.length} 天</span></p>
+          <h2 className="plan-name">{plan.name}</h2>{plan.dayPlans&&<span className="home-routine-label">{state.draft?.dayName??routine.name}</span>}
+          <p className="home-plan-meta"><span>{plan.dayPlans?'分日训练':typeNames[plan.type]}</span><span>第 {weekIndex(plan,date)+1} / {plan.weeks} 周</span><span>每周 {plan.days.length} 天</span></p>
         </div>
         <div className="plan-stats home-metrics">
           <div><span>预计用时</span><strong>{estimated[0]}<small>{estimated.slice(1).join(' ')}</small></strong></div>
