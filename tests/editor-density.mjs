@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {chromium} from 'playwright-core';
+import {selectLibraryFor} from './library-helpers.mjs';
 import {findExercise} from '../src/content/exercises.ts';
 import {createItem} from '../src/domain/plans.ts';
 
@@ -25,18 +26,18 @@ async function inspect(name){
 const read=()=>page.evaluate(()=>new Promise((resolve,reject)=>{const request=indexedDB.open('training-follow-db',1);request.onsuccess=()=>{const db=request.result,tx=db.transaction('state','readonly'),q=tx.objectStore('state').get('current');q.onsuccess=()=>resolve(q.result);tx.oncomplete=()=>db.close();tx.onabort=()=>reject(tx.error);};}));
 try{
   await fs.mkdir('test-results',{recursive:true});await page.goto(url);await page.locator('dialog.wide[open]').waitFor();
-  assert.equal(await page.getByRole('group',{name:'训练类型',exact:true}).getByRole('button').count(),2);
+  assert.equal(await page.getByRole('group',{name:'训练类型',exact:true}).getByRole('button').count(),3);
   assert.equal(await page.getByRole('button',{name:'训练类型综合训练',exact:true}).count(),0);
   assert.equal(await page.locator('.plan-meta-hint,.plan-module .editor-status,.weight-note').count(),0);
   const density=await page.evaluate(()=>{const library=document.querySelector('.library-scroll'),box=library.getBoundingClientRect(),visible=[...library.querySelectorAll('[data-exercise]')].filter(n=>{const r=n.getBoundingClientRect();return r.top>=box.top&&r.bottom<=box.bottom;}).length,plan=document.querySelector('.plan-module').getBoundingClientRect(),scroll=document.querySelector('[data-plan-scroll]').getBoundingClientRect(),weeks=document.querySelector('.plan-schedule-row .range-field').getBoundingClientRect(),days=document.querySelector('.weekday-field').getBoundingClientRect();return {visible,planHeight:plan.height,scrollHeight:scroll.height,sameRow:Math.abs(weeks.y-days.y)<1,footerHeight:document.querySelector('.editor-actions').getBoundingClientRect().height};});
   assert.ok(density.visible>=25,JSON.stringify(density));assert.ok(density.scrollHeight/density.planHeight>.7);assert.ok(density.footerHeight<=48);assert.ok(density.sameRow);measurements.push({name:'1133×744 工作区',...density});
-  await page.screenshot({path:'test-results/editor-density-empty.png'});results.push('仅两类库，首屏至少25个动作，动作设置区超过计划模块70%，周数与训练日同行，底栏不超过48px');
-  await page.getByRole('button',{name:'添加原地踏步',exact:true}).click();await page.getByRole('button',{name:'完成此动作',exact:true}).click();
+  await page.screenshot({path:'test-results/editor-density-empty.png'});results.push('热身、代谢和无氧三类库，首屏至少25个动作，动作设置区超过计划模块70%，周数与训练日同行，底栏不超过48px');
+  await selectLibraryFor(page,'march');await page.getByRole('button',{name:'添加原地踏步',exact:true}).click();await page.getByRole('button',{name:'完成此动作',exact:true}).click();
   const scenarios=[['strength','barbell-deadlift'],['strength','db-row'],['strength','squat-press'],['strength','farmer-carry'],['strength','plank-walkup'],['strength','single-leg-balance'],['aerobic','rower-interval'],['aerobic','burpee'],['aerobic','battle-rope'],['aerobic','skater-step'],['aerobic','easy-cycle'],['aerobic','hamstring-stretch']];
   for(const height of [744,650]){
     await page.setViewportSize({width:1133,height});
     for(const [type,id] of scenarios){
-      const exercise=findExercise(id);await page.getByRole('button',{name:'训练类型'+(type==='strength'?'无氧训练':'有氧训练'),exact:true}).click();await page.locator('[data-exercise="'+id+'"]').click();
+      const exercise=findExercise(id);await selectLibraryFor(page,id);await page.locator('[data-exercise="'+id+'"]').click();
       const sets=page.getByRole('slider',{name:'调节'+exercise.name+'组数',exact:true});if(await sets.count())await range('调节'+exercise.name+'组数',3);
       await inspect(height+'px '+exercise.name);
       if(exercise.countable){await page.getByRole('button',{name:exercise.name+'计量按时长',exact:true}).click();await inspect(height+'px '+exercise.name+'按时长');await page.getByRole('button',{name:exercise.name+'计量按次数',exact:true}).click();}
@@ -54,6 +55,6 @@ try{
   // Existing mixed plans stay mixed when opened/saved without a type change.
   const now=new Date().toISOString(),legacy={id:'legacy-mixed',name:'原综合计划',type:'mixed',weeks:4,days:[1,3,5],startDate:'2026-10-14',items:['burpee','farmer-carry','plank-walkup','band'].map(id=>createItem(findExercise(id))),createdAt:now,updatedAt:now,version:1};
   await page.evaluate(plan=>new Promise((resolve,reject)=>{const q=indexedDB.open('training-follow-db',1);q.onsuccess=()=>{const db=q.result,tx=db.transaction('state','readwrite'),store=tx.objectStore('state'),r=store.get('current');r.onsuccess=()=>store.put({...r.result,plans:[plan],activePlanId:plan.id,revision:r.result.revision+1},'current');tx.oncomplete=()=>{db.close();resolve();};tx.onabort=()=>reject(tx.error);};}),legacy);
-  await page.reload();await page.getByRole('button',{name:'编辑计划',exact:true}).click();assert.equal(await page.getByRole('button',{name:'训练类型无氧训练',exact:true}).getAttribute('aria-pressed'),'true');assert.deepEqual(await page.locator('.item-toggle strong').allTextContents(),legacy.items.map(i=>findExercise(i.exerciseId).name));await page.getByRole('button',{name:'保存修改',exact:true}).click();await page.getByRole('button',{name:'进入跟练',exact:true}).waitFor();state=await read();assert.equal(state.plans[0].type,'mixed');assert.deepEqual(state.plans[0].items,legacy.items);results.push('旧综合计划进入编辑默认显示无氧库，保存保持原分类、动作顺序及全部参数');
+  await page.reload();await page.getByRole('button',{name:'编辑计划',exact:true}).click();assert.equal(await page.getByRole('button',{name:'训练类型无氧训练',exact:true}).getAttribute('aria-pressed'),'true');assert.deepEqual(await page.locator('.item-toggle strong').allTextContents(),legacy.items.map(i=>findExercise(i.exerciseId).name));await page.getByRole('button',{name:'训练类型热身',exact:true}).click();await page.getByRole('button',{name:'保存修改',exact:true}).click();await page.getByRole('button',{name:'进入跟练',exact:true}).waitFor();state=await read();assert.equal(state.plans[0].type,'mixed');assert.deepEqual(state.plans[0].items,legacy.items);results.push('旧综合计划进入编辑默认显示无氧库，保存保持原分类、动作顺序及全部参数');
   assert.deepEqual(errors,[]);await fs.writeFile('test-results/editor-density-report.json',JSON.stringify({results,measurements,pageErrors:errors},null,2));console.log(JSON.stringify({passed:results.length,results,workspace:density},null,2));
 }catch(error){await page.screenshot({path:'test-results/editor-density-failure.png'});throw error;}finally{await browser.close();}

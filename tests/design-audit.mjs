@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {chromium} from 'playwright-core';
+import {selectLibraryFor} from './library-helpers.mjs';
 
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 const context=await browser.newContext({viewport:{width:1133,height:744},screen:{width:1133,height:744},hasTouch:true,isMobile:true,deviceScaleFactor:2,colorScheme:'light'});
@@ -15,7 +16,13 @@ async function audit(label){
     if(document.documentElement.scrollWidth>innerWidth+1||document.documentElement.scrollHeight>innerHeight+1)issues.push('document overflow');
     for(const node of modules){const r=node.getBoundingClientRect();if(r.x<-1||r.right>innerWidth+1||r.y<-1||r.bottom>innerHeight+1||node.scrollWidth>node.clientWidth+1)issues.push('module bounds '+node.className);}
     const library=host.querySelector('.library-module'),plan=host.querySelector('.plan-module');
-    if(library&&Math.abs(library.getBoundingClientRect().width-plan.getBoundingClientRect().width)>1)issues.push('unequal editor modules');
+    if(library){
+      const phone=matchMedia('(max-width:600px) and (orientation:portrait)').matches;
+      if(phone){
+        const visible=[library,plan].filter(node=>node.getBoundingClientRect().width>0);
+        if(visible.length!==1||Math.abs(visible[0].getBoundingClientRect().width-host.querySelector('.compact-editor').clientWidth)>1)issues.push('phone editor must use one full-width module');
+      }else if(Math.abs(library.getBoundingClientRect().width-plan.getBoundingClientRect().width)>1)issues.push('unequal editor modules');
+    }
     for(const node of host.querySelectorAll('h1,h2,h3,h4,.eyebrow'))if(/[A-Za-z]/.test(node.textContent))issues.push('English heading '+node.textContent);
     for(const node of host.querySelectorAll('h1,h2,h3,h4,p,label,button,select,summary,small')){
       const r=node.getBoundingClientRect();if(!r.width||!r.height||node.closest('.sr-only')||!node.textContent.trim())continue;
@@ -47,18 +54,20 @@ try{
   await touch(start,{x:start.x,y:start.y-180});const scrolled=await page.locator('.library-scroll').evaluate(n=>n.scrollTop);
   assert.ok(scrolled>80,'vertical touch over a chip must scroll the library');assert.equal(await page.locator('.plan-item').count(),0);assert.equal(await page.locator('.drag-ghost').count(),0);measurements.push({label:'纵向触控浏览',scrollTop:scrolled});
   await page.locator('.library-scroll').evaluate(n=>n.scrollTop=0);
+  await selectLibraryFor(page,'march');
   const chip=await page.locator('[data-exercise="march"]').boundingBox(),timeline=await page.locator('[data-plan-scroll]').boundingBox();
   await touch({x:chip.x+chip.width/2,y:chip.y+chip.height/2},{x:timeline.x+timeline.width/2,y:timeline.y+timeline.height/2});assert.equal(await page.locator('.plan-item').count(),1);
   const beforeCancel=await page.locator('.plan-item').count();await page.mouse.move(chip.x+chip.width/2,chip.y+chip.height/2);await page.mouse.down();await page.mouse.move(timeline.x+30,timeline.y+80,{steps:8});await page.locator('.drag-ghost').waitFor();await page.keyboard.press('Escape');await page.mouse.up();await page.waitForTimeout(150);assert.equal(await page.getByRole('dialog',{name:'创建计划'}).count(),1);assert.equal(await page.locator('.drag-ghost').count(),0);assert.equal(await page.locator('.plan-item').count(),beforeCancel);
   results.push('纵向触控浏览、横向拖入、取消拖动不误添加且保留编辑器');
 
+  await selectLibraryFor(page,'barbell-deadlift');
   await page.locator('[data-exercise="barbell-deadlift"]').focus();await page.keyboard.press('Enter');const weight=page.getByRole('slider',{name:'调节杠铃硬拉重量',exact:true});await weight.focus();await page.keyboard.press('End');await page.keyboard.press('ArrowLeft');assert.equal(await weight.inputValue(),'199.5');
   for(const fontSize of ['16px','32px']){
     await page.evaluate(size=>document.documentElement.style.fontSize=size,fontSize);await audit(fontSize+' 编辑器');
     const overlaps=await page.locator('.expanded .range-field').evaluateAll(fields=>fields.flatMap(field=>{const input=field.querySelector('input').getBoundingClientRect(),output=field.querySelector('output').getBoundingClientRect(),text=field.querySelector('output strong').getBoundingClientRect();return text.x<input.right-1||text.right>output.right+1?['range value overlap']:[];}));assert.deepEqual(overlaps,[],fontSize);
   }
   await page.evaluate(()=>document.documentElement.style.removeProperty('font-size'));await page.locator('.movement-details summary').click();await page.locator('.movement-source').waitFor({state:'visible'});await audit('展开 SVG 动作参考');await page.locator('.movement-details summary').click();
-  for(const [type,id] of [['strength','plank'],['aerobic','cycle'],['aerobic','standing-rest']]){await page.getByRole('button',{name:'训练类型'+(type==='strength'?'无氧训练':'有氧训练'),exact:true}).click();await page.locator('[data-exercise="'+id+'"]').click();}
+  for(const [type,id] of [['strength','plank'],['aerobic','cycle'],['aerobic','standing-rest']]){await selectLibraryFor(page,id);await page.locator('[data-exercise="'+id+'"]').click();}
   await page.getByLabel('计划名称',{exact:true}).fill('全应用设计验收');await page.screenshot({path:'test-results/design-editor-light.png'});
   results.push('命名弹窗、图标语义与几何、键盘添加/滑块、200% 字号参数不重叠');
 

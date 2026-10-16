@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {chromium} from 'playwright-core';
+import {selectLibraryFor} from './library-helpers.mjs';
 import {weekday,buildStages,estimateStages} from '../src/domain/plans.ts';
 import {exercises} from '../src/content/exercises.ts';
-const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true}),context=await browser.newContext({viewport:{width:1133,height:744},deviceScaleFactor:2,isMobile:true,hasTouch:true}),page=await context.newPage(),errors=[],results=[];
+const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true}),context=await browser.newContext({viewport:{width:1133,height:744},deviceScaleFactor:2,isMobile:true,hasTouch:true}),page=await context.newPage(),errors=[],results=[];
 page.on('pageerror',e=>errors.push(e.message));
 const read=()=>page.evaluate(()=>new Promise((resolve,reject)=>{const r=indexedDB.open('training-follow-db',1);r.onsuccess=()=>{const db=r.result,tx=db.transaction('state','readonly'),q=tx.objectStore('state').get('current');q.onsuccess=()=>resolve(q.result);tx.oncomplete=()=>db.close();tx.onabort=()=>reject(tx.error);};}));
 async function range(name,value){await page.getByRole('slider',{name,exact:true}).evaluate((e,value)=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,String(value));e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));},value);}
@@ -15,7 +16,7 @@ try{
  await page.getByLabel('计划名称',{exact:true}).fill('分日与组合训练');
  await page.locator('[data-exercise=squat]').click();await range('调节徒手深蹲组数',2);
  await page.locator('[data-exercise=db-row]').click();await range('调节单臂哑铃划船组数',2);
- await page.locator('[data-exercise=march]').click();await range('调节原地踏步时长',5);
+ await selectLibraryFor(page,'march');await page.locator('[data-exercise=march]').click();await range('调节原地踏步时长',5);
  await page.getByRole('button',{name:'启用分日编排',exact:true}).click();
  await page.getByLabel('当前编辑的训练日').selectOption('5');await page.getByLabel('训练日方案名称').fill('力量循环');
  await openItem('徒手深蹲');await page.getByRole('button',{name:'动作设置方式逐组设置',exact:true}).click();
@@ -41,7 +42,7 @@ try{
  page.once('dialog',d=>d.accept());await page.getByLabel('复制其他训练日方案').selectOption('5');await page.getByLabel('训练日方案名称').fill('上肢训练');
  await page.getByLabel('当前编辑的训练日').selectOption('3');await page.getByLabel('训练日方案名称').fill('有氧恢复');
  for(const name of ['徒手深蹲','单臂哑铃划船','原地踏步'])await page.getByRole('button',{name:'删除'+name,exact:true}).click();
- await page.getByRole('button',{name:'训练类型有氧训练',exact:true}).click();await page.locator('[data-exercise=cycle]').click();await range('调节健身车骑行时长',5);await range('调节健身车骑行主观用力',16);
+ await page.getByRole('button',{name:'训练类型代谢训练',exact:true}).click();await page.locator('[data-exercise=cycle]').click();await range('调节健身车骑行时长',5);await range('调节健身车骑行主观用力',16);
  await page.getByRole('button',{name:'完成设计',exact:true}).click();await page.getByRole('button',{name:'进入跟练',exact:true}).waitFor();
  let state=await read(),plan=state.plans[0];assert.equal(state.schemaVersion,2);assert.equal(plan.dayPlans.length,3);
  const mon=plan.dayPlans.find(d=>d.day===1),fri=plan.dayPlans.find(d=>d.day===5);assert.notEqual(mon.items[0].id,fri.items[0].id);assert.notEqual(mon.groups[0].id,fri.groups[0].id);assert.equal(mon.items[1].setTargets[1].weight,6);assert.equal(plan.dayPlans.find(d=>d.day===3).items[0].effort,16);

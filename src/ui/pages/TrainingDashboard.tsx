@@ -54,26 +54,33 @@ export function TrainingDashboard({plan,state,busy,total,onStart,onResume,onDisc
         <div><span>本周跟练</span><strong>{elapsed[0]}<small>{elapsed.slice(1).join(' ')}</small></strong><small className="dashboard-stat-note">按实际用时统计</small></div>
       </section>
 
-      <section className="dashboard-details">
+      <section className="dashboard-details" id="dashboard-records" tabIndex={0} aria-label="近期安排与训练记录">
         <div className="dashboard-content-switch" role="group" aria-label="看板内容">
           <button aria-pressed={content==='schedule'} onClick={()=>setContent('schedule')}>近期安排</button>
           <button aria-pressed={content==='history'} onClick={()=>setContent('history')}>训练记录</button>
         </div>
-        {content==='schedule'?<ul className="schedule-list dashboard-list" aria-label="接下来的训练安排">
+        <section className="dashboard-column schedule-column" data-active={content==='schedule'} aria-labelledby="schedule-column-title">
+        <h3 className="phone-column-title" id="schedule-column-title">近期安排</h3>
+        <ul className="schedule-list dashboard-list" aria-label="接下来的训练安排">
           {upcoming.map(d=><li className="schedule-row dashboard-row" key={d}>
             <span className="dashboard-date-tile" aria-hidden="true"><small>{Number(d.slice(5,7))}月</small><strong>{Number(d.slice(8))}</strong></span>
-            <div className="dashboard-row-copy"><strong>{dateLabel(d)}</strong><small>{plan.dayPlans?routineForDate(plan,d).name:d<date?'原训练日，可按需补练':'训练日'}</small></div>
+            <div className="dashboard-row-copy"><strong><span className="wide-dashboard-date">{dateLabel(d)}</span><span className="phone-dashboard-date">{monthDay(d)}</span></strong><small>{plan.dayPlans?routineForDate(plan,d).name:d<date?'原训练日，可按需补练':'训练日'}</small></div>
             <span className="status">{distanceLabel(d,date)}</span>
           </li>)}
           {!upcoming.length&&<li className="dashboard-empty"><Icon name={focusDate?'calendar':'check'} size={26}/><p>{focusDate?'这是本轮最后一次训练':'本轮安排已全部完成'}</p><small>{focusDate?'完成后即可结束本轮计划':'可编辑计划，安排下一轮训练'}</small></li>}
-        </ul>:<ul className="dashboard-list" aria-label="最近三次跟练记录">
+        </ul>
+        </section>
+        <section className="dashboard-column history-column" data-active={content==='history'} aria-labelledby="history-column-title">
+        <h3 className="phone-column-title" id="history-column-title">训练记录</h3>
+        <ul className="dashboard-list" aria-label="最近三次跟练记录">
           {history.map(({workout:w,date:d})=><li className="dashboard-row" key={w.id}>
             <span className={'dashboard-record-icon '+(w.completed?'complete':'')}><Icon name={w.completed?'check':'history'} size={20}/></span>
-            <div className="dashboard-row-copy"><strong>{dateLabel(d)}</strong><small>{w.dayName?w.dayName+' · ':''}实际跟练 {durationLabel(w.elapsed)}</small></div>
+            <div className="dashboard-row-copy"><strong><span className="wide-dashboard-date">{dateLabel(d)}</span><span className="phone-dashboard-date">{monthDay(d)}</span></strong><small>{w.dayName?w.dayName+' · ':''}实际跟练 {durationLabel(w.elapsed)}</small></div>
             <span className={'status '+(w.completed?'complete':'')}>{w.completed?'已完成':'部分训练'}</span>
           </li>)}
           {!history.length&&<li className="dashboard-empty"><Icon name="history" size={26}/><p>还没有跟练记录</p><small>保存训练后，在这里查看实际用时</small></li>}
-        </ul>}
+        </ul>
+        </section>
       </section>
     </div>
     <footer className="home-session-footer">

@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import type {PointerEvent} from 'react';
 import type {BodyPart,LibraryType} from '../../domain/types.ts';
-import {bodyPartNames} from '../../domain/types.ts';
+import {bodyPartNames,libraryNames} from '../../domain/types.ts';
 import {getLibraryGroups} from '../../domain/exercise-library.ts';
 import type {LibraryFilter} from '../../domain/exercise-library.ts';
 import {libraryGroups} from '../../content/library-layouts.ts';
@@ -9,7 +9,7 @@ import type {DragPayload} from './usePlanDrag.ts';
 import {Icon} from './Icon.tsx';
 import {SegmentedChoice} from './SegmentedChoice.tsx';
 
-const typeOptions:readonly {value:LibraryType;label:string}[]=[{value:'aerobic',label:'有氧训练'},{value:'strength',label:'无氧训练'}];
+const typeOptions:readonly {value:LibraryType;label:string}[]=(['warmup','aerobic','strength'] as const).map(value=>({value,label:libraryNames[value]}));
 const initialFilter:LibraryFilter={equipment:'all',bodyPart:'all',group:'all'};
 
 export function ExerciseLibrary({type,onTypeChange,onAdd,onDragStart,suppressClick,insertAt,onCancelInsert}:{type:LibraryType;onTypeChange:(type:LibraryType)=>void;onAdd:(id:string)=>void;onDragStart:(event:PointerEvent,payload:DragPayload)=>void;suppressClick:()=>boolean;insertAt:number|null;onCancelInsert:()=>void}){
@@ -39,6 +39,6 @@ export function ExerciseLibrary({type,onTypeChange,onAdd,onDragStart,suppressCli
       </section>)}
       {!count&&<div className="empty-state compact"><Icon name="train" size={32}/><h3>没有匹配的动作</h3><p>调整部位、分组或器械筛选</p><button className="secondary" onClick={()=>setFilter(initialFilter)}>显示全部动作</button></div>}
     </div>
-    <footer className="library-footer"><Icon name="info" size={16}/><span>{insertAt!==null?'插入第 '+(insertAt+1)+' 位':'拖动或点选添加'}</span>{insertAt!==null&&<button className="text-button" onClick={onCancelInsert}>取消插入</button>}</footer>
+    <footer className="library-footer"><Icon name="info" size={16}/><span className="wide-library-hint">{insertAt!==null?'插入第 '+(insertAt+1)+' 位':'拖动或点选添加'}</span><span className="phone-library-hint">{insertAt!==null?'点选插入第 '+(insertAt+1)+' 位':'点选动作后设置目标'}</span>{insertAt!==null&&<button className="text-button" onClick={onCancelInsert}>取消插入</button>}</footer>
   </section>;
 }

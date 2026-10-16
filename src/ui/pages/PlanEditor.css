@@ -1,4 +1,6 @@
 /* Advanced editing keeps both module frames fixed; only their contents scroll. */
+.compact-editor .library-heading .target-mode{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-width:0;max-width:100%}
+.compact-editor .library-heading .target-mode button{min-width:0;padding-inline:8px;white-space:normal}
 .compact-editor .plan-name-row{display:flex;gap:6px;align-items:center}
 .compact-editor .plan-name-row .name-field{flex:1;min-width:0}
 .compact-editor .daily-toggle{min-height:32px;padding:3px 9px;border:1px solid var(--line);border-radius:8px;background:var(--raised);font-size:var(--font-caption);flex-shrink:0}

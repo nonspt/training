@@ -1,5 +1,7 @@
 # 项目开发规则
 
+2026-10-16 当前发布边界：用户最新要求“发布至GitHub”，已授权将已验证的动作库重构、动态目标和手机页面优化作为 1.2.0 发布至既有 nonspt/training main，沿用 Pages 工作流。本次新授权覆盖之前本地限制；未来新优化仍仅在本地，须再次收到明确上传指令才发布。
+
 遵循用户提供的 Vibe Coding 长期约定。开始修改先读 `docs/project/PROJECT_CONTEXT.md`，再按任务查阅共享规范：`D:/OpenAIData/CodexHome/developer-standards/vibe-coding/docs/standards/`。共享规范不存在时检查工作区“开发规范”的镜像，不重复制造规范副本。
 
 保留当前 React/TypeScript、分层、暖金色/双主题、统一 SVG 和独立数据库。模块边界固定，内容只在所属模块内滚动。修改时间与次数逻辑必须覆盖计时/计次、暂停/恢复和部分完成路径；修改数据必须覆盖备份与事务失败保护。

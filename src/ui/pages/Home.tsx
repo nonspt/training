@@ -56,6 +56,7 @@ export function Home({state,busy,onCreate,onEdit,onStart,onResume,onDiscard}:Hom
         <div className="progress home-plan-progress" role="progressbar" aria-label="计划完成进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={completion}><span style={{width:completion+'%'}}/></div>
         <section className="home-contents" aria-labelledby="home-movement-title">
           <div className="home-section-heading"><h3 id="home-movement-title">完整时间线</h3><span>{stages.length} 个环节</span></div>
+          <div className="home-timeline-scroll" tabIndex={0} role="region" aria-label="完整训练时间线">
           <ol className="outline-list home-movement-grid" ref={movements} data-density={movementDensity} aria-label="按时间顺序排列的训练动作">
             {stages.map((stage,index)=>{
               return <li className="outline-row home-movement" key={stage.id} data-flow-node={stage.id}
@@ -66,6 +67,7 @@ export function Home({state,busy,onCreate,onEdit,onStart,onResume,onDiscard}:Hom
             })}
             <FlowConnections hostRef={movements} layoutKey={plan.id+':'+plan.version+':'+stages.map(stage=>stage.id).join(',')} layout="grid"/>
           </ol>
+          </div>
         </section>
       </div>
       <footer className="plan-home-actions home-plan-footer">

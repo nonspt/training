@@ -1,5 +1,6 @@
-import type {BodyPart,Category,Exercise,LibraryType,TrainingType} from '../domain/types.ts';
+import type {BodyPart,Category,Exercise,TrainingType} from '../domain/types.ts';
 import {additionalExercises} from './additional-exercises.ts';
+import {warmupExercises} from './warmup-exercises.ts';
 import {libraryGroups} from './library-layouts.ts';
 export const sources={
   warmup:'https://www.nhs.uk/live-well/exercise/how-to-warm-up-before-exercising/',
@@ -58,10 +59,10 @@ const legacyParts:Record<string,BodyPart[]>={
   'standing-rest':['full'],'slow-walk':['legs','full'],'slow-cycle':['legs'],
   'calf-stretch':['legs'],'thigh-stretch':['legs'],'hamstring-stretch':['legs','glutes']
 };
-const trainingTypes:LibraryType[]=['aerobic','strength'];
-export const exercises:Exercise[]=[...originalExercises,...additionalExercises].map(exercise=>({
+const trainingTypes:Exclude<TrainingType,'mixed'>[]=['aerobic','strength'];
+export const exercises:Exercise[]=[...originalExercises,...additionalExercises,...warmupExercises].map(exercise=>({
   ...exercise,
-  types:trainingTypes.filter(type=>libraryGroups[type].some(group=>group.exerciseIds.includes(exercise.id))),
+  types:trainingTypes.filter(type=>[...libraryGroups[type],...libraryGroups.warmup].some(group=>group.exerciseIds.includes(exercise.id))),
   bodyParts:exercise.bodyParts??legacyParts[exercise.id]??['full'],
   equipmentKind:exercise.equipmentKind??(exercise.equipment.startsWith('徒手')||exercise.equipment==='训练垫'||exercise.equipment==='无需器械'?'bodyweight':'equipment'),
   maxWeight:exercise.maxWeight??50,

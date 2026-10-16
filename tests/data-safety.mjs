@@ -51,7 +51,7 @@ try{
   assert.equal(await page.locator('.next-movement').innerText(),'组间休息');assert.equal(await page.locator('.next-effort strong').innerText(),'1 / 16');assert.match(await page.locator('.after-next').innerText(),/单臂哑铃划船/);assert.match(await page.locator('.after-next').innerText(),/第 2 组/);
   const fixed=await page.locator('.target-card').boundingBox();await arrowAudit();await page.screenshot({path:'test-results/v15-weighted-details.png'});await returnHome();
   await seed(weighted.stages.length-1);await page.getByRole('button',{name:'继续跟练',exact:true}).click();await page.getByRole('meter',{name:'计划主观用力目标'}).waitFor();
-  assert.equal(await page.getByRole('meter',{name:'计划主观用力目标'}).getAttribute('aria-valuemax'),'16');assert.equal(await page.getByRole('meter',{name:'计划主观用力目标'}).getAttribute('aria-valuenow'),'16');assert.equal(await page.locator('.effort-meter>.filled').count(),16);
+  assert.equal(await page.getByRole('meter',{name:'计划主观用力目标'}).getAttribute('aria-valuemax'),'16');assert.equal(await page.getByRole('meter',{name:'计划主观用力目标'}).getAttribute('aria-valuenow'),'16');assert.equal(await page.getByRole('meter',{name:'计划主观用力目标'}).locator('.filled').count(),16);
   assert.ok(Math.abs((await page.locator('.target-card').boundingBox()).height-fixed.height)<1);await page.screenshot({path:'test-results/v15-effort16-details.png'});await returnHome();
   await seed(weighted.stages.length-2);await page.getByRole('button',{name:'继续跟练',exact:true}).click();assert.equal(await page.locator('.next-effort strong').innerText(),'16 / 16');await returnHome();
   results.push('编辑/保存/快照支持用力16；右侧卡片补充真实目标、器械、准备与后续环节，外框尺寸不变');

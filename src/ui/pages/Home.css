@@ -19,6 +19,7 @@
 .home-redesign .home-plan-progress{height:4px;min-height:4px;margin:0;background:var(--raised);flex-shrink:0}
 .home-redesign .home-plan-progress>span{background:var(--accent-ink)}
 .home-redesign .home-contents{display:flex;flex-direction:column;flex:1 0 auto;margin-top:14px}
+.home-redesign .home-timeline-scroll{display:contents}
 .home-redesign .home-section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-shrink:0}
 .home-redesign .home-section-heading h3{font-size:var(--font-body);font-weight:600;letter-spacing:0}
 .home-redesign .home-section-heading>span{font-size:var(--font-caption);color:var(--secondary);text-align:right}
@@ -59,6 +60,8 @@
 .home-redesign .dashboard-week-progress>span{background:var(--accent-ink)}
 .home-redesign .dashboard-stat-note{display:block;font-size:var(--font-caption);line-height:1.4;color:var(--secondary);margin-top:5px}
 .home-redesign .dashboard-details{display:flex;flex-direction:column;flex:1 0 auto;min-height:0}
+.home-redesign .dashboard-column{display:flex;flex-direction:column;flex:1 0 auto;min-height:0}
+.home-redesign .dashboard-column[data-active=false],.phone-column-title,.phone-dashboard-date{display:none}
 .home-redesign .dashboard-content-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px;background:var(--raised);border-radius:12px;flex-shrink:0}
 .home-redesign .dashboard-content-switch>button{min-width:44px;min-height:44px;padding:8px;border:0;border-radius:9px;background:transparent;color:var(--secondary);font-size:var(--font-label);font-weight:500}
 .home-redesign .dashboard-content-switch>button[aria-pressed=true]{background:var(--surface);color:var(--text);box-shadow:var(--shadow);font-weight:600}

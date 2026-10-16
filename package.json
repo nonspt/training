@@ -1,6 +1,6 @@
 {
   "name": "training-follow",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,6 +17,8 @@
     "test:design": "node tests/design-audit.mjs",
     "test:home": "node tests/home-dashboard.mjs",
     "test:timeline": "node tests/timeline-flow.mjs",
+    "test:phone": "node tests/follow-phone.mjs",
+    "test:mobile": "node tests/mobile-pages.mjs",
     "test:data-safety": "node tests/data-safety.mjs",
     "test:program": "node --experimental-strip-types tests/program-browser.mjs",
     "test:program-upgrade": "node tests/program-upgrade.mjs"
